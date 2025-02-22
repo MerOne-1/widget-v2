@@ -43,7 +43,7 @@ const baseInputStyles = `
   width: 100%;
   padding: 16px;
   border: 2px solid ${theme.colors.border};
-  border-radius: 8px;
+  border-radius: ${theme.borderRadius.default};
   font-family: ${theme.typography.fontFamily};
   font-size: ${theme.typography.text.size};
   color: ${theme.colors.text};

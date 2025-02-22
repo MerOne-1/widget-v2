@@ -1,11 +1,11 @@
 export const theme = {
   colors: {
-    border: '#F5BBC9',
+    border: '#000000',
     title: '#000000',
     text: '#000000',
     buttonText: '#FFFFFF',
     button: '#000000',
-    icon: '#F5BBC9',
+    icon: '#000000',
   },
   typography: {
     fontFamily: '"Poppins", sans-serif',
@@ -27,6 +27,6 @@ export const theme = {
   },
   borderRadius: {
     button: '5px',
-    default: '0px',
+    default: '5px',
   },
 };

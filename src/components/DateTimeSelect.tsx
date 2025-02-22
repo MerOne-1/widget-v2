@@ -14,6 +14,8 @@ const Calendar = styled.div`
   gap: 1px;
   background-color: ${theme.colors.border};
   border: 1px solid ${theme.colors.border};
+  border-radius: ${theme.borderRadius.default};
+  overflow: hidden;
 `;
 
 const WeekDay = styled.div`
@@ -74,6 +76,7 @@ const TimeGrid = styled.div`
 const TimeSlot = styled.button<{ $isSelected?: boolean }>`
   padding: 12px;
   border: 1px solid ${props => props.$isSelected ? theme.colors.button : theme.colors.border};
+  border-radius: ${theme.borderRadius.default};
   background-color: ${props => props.$isSelected ? theme.colors.button : 'white'};
   color: ${props => props.$isSelected ? 'white' : theme.colors.text};
   cursor: pointer;
