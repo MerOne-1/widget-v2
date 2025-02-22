@@ -8,6 +8,45 @@ const Container = styled.div`
   gap: 24px;
 `;
 
+const CalendarHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+`;
+
+const MonthNavigator = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 16px;
+`;
+
+const NavigationButton = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 24px;
+  padding: 4px 8px;
+  color: ${theme.colors.text};
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &:hover:not(:disabled) {
+    color: ${theme.colors.primary};
+  }
+`;
+
+const MonthYear = styled.span`
+  font-size: ${theme.typography.title.size};
+  font-weight: ${theme.typography.title.weight};
+  color: ${theme.colors.title};
+  min-width: 180px;
+  text-align: center;
+`;
+
 const Calendar = styled.div`
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -97,13 +136,32 @@ export const DateTimeSelect: React.FC<DateTimeSelectProps> = ({
 }) => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [currentMonth, setCurrentMonth] = useState(new Date());
   
   // Generate calendar data
   const today = new Date();
   const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  const currentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-  const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
-  const firstDayOfMonth = currentMonth.getDay();
+  const daysInMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0).getDate();
+  const firstDayOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1).getDay();
+
+  const monthNames = [
+    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+  ];
+
+  const handlePreviousMonth = () => {
+    const newMonth = new Date(currentMonth);
+    newMonth.setMonth(newMonth.getMonth() - 1);
+    if (newMonth.getTime() >= today.getTime()) {
+      setCurrentMonth(newMonth);
+    }
+  };
+
+  const handleNextMonth = () => {
+    const newMonth = new Date(currentMonth);
+    newMonth.setMonth(newMonth.getMonth() + 1);
+    setCurrentMonth(newMonth);
+  };
   
   // Generate time slots (9:00 AM to 5:00 PM, 15-minute intervals)
   const generateTimeSlots = () => {
@@ -118,7 +176,7 @@ export const DateTimeSelect: React.FC<DateTimeSelectProps> = ({
   };
 
   const handleDateSelect = (day: number) => {
-    const newDate = new Date(today.getFullYear(), today.getMonth(), day);
+    const newDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
     setSelectedDate(newDate);
     setSelectedTime(null);
     onDateTimeSelect(newDate, null);
@@ -134,6 +192,22 @@ export const DateTimeSelect: React.FC<DateTimeSelectProps> = ({
 
   return (
     <Container>
+      <CalendarHeader>
+        <MonthNavigator>
+          <NavigationButton 
+            onClick={handlePreviousMonth}
+            disabled={currentMonth.getMonth() === today.getMonth() && currentMonth.getFullYear() === today.getFullYear()}
+          >
+            ‹
+          </NavigationButton>
+          <MonthYear>
+            {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
+          </MonthYear>
+          <NavigationButton onClick={handleNextMonth}>
+            ›
+          </NavigationButton>
+        </MonthNavigator>
+      </CalendarHeader>
       <Calendar>
         {weekDays.map(day => (
           <WeekDay key={day}>{day}</WeekDay>
@@ -143,9 +217,9 @@ export const DateTimeSelect: React.FC<DateTimeSelectProps> = ({
         ))}
         {Array.from({ length: daysInMonth }).map((_, index) => {
           const day = index + 1;
-          const date = new Date(today.getFullYear(), today.getMonth(), day);
-          const isToday = day === today.getDate();
-          const isSelected = selectedDate?.getDate() === day;
+          const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+          const isToday = day === today.getDate() && currentMonth.getMonth() === today.getMonth() && currentMonth.getFullYear() === today.getFullYear();
+          const isSelected = selectedDate?.getDate() === day && selectedDate?.getMonth() === currentMonth.getMonth() && selectedDate?.getFullYear() === currentMonth.getFullYear();
           const isPast = date < startOfToday;
 
           return (
