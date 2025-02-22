@@ -19,7 +19,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
     onValidityChange(isValid);
     
     if (isValid && date && time) {
-      const formattedDate = date.toLocaleDateString('en-US', {
+      const formattedDate = date.toLocaleDateString('es-ES', {
         weekday: 'long',
         year: 'numeric',
         month: 'long',
