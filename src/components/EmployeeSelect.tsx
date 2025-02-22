@@ -56,7 +56,7 @@ export const EmployeeSelect: React.FC<EmployeeSelectProps> = ({
 
   if (availableEmployees.length === 0) {
     return (
-      <div>No employees available for the selected services.</div>
+      <div>No hay profesionales disponibles para los servicios seleccionados.</div>
     );
   }
 
