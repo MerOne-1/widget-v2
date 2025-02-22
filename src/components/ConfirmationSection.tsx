@@ -70,14 +70,14 @@ const List = styled.ul`
   margin: 0;
 `;
 
-const ListItem = styled.li`
+const ListItem = styled.li<{ $noBullet?: boolean }>`
   margin-bottom: 8px;
-  padding-left: 24px;
+  padding-left: ${props => props.$noBullet ? '0' : '24px'};
   position: relative;
   line-height: 1.5;
   
   &:before {
-    content: '•';
+    content: ${props => props.$noBullet ? 'none' : '"•"'};
     position: absolute;
     left: 8px;
     color: ${theme.colors.border};
@@ -132,10 +132,9 @@ export const ConfirmationSection: React.FC<ConfirmationSectionProps> = ({
       <Section>
         <SectionTitle>Información Importante</SectionTitle>
         <List>
-          <ListItem>Por favor, llega 10 minutos antes de tu cita</ListItem>
-          <ListItem>Las cancelaciones deben realizarse con al menos 24 horas de antelación</ListItem>
-          <ListItem>El pago se realizará en el momento del servicio</ListItem>
-          <ListItem>Si vas a llegar tarde, por favor llámanos para informarnos</ListItem>
+          <ListItem $noBullet style={{ whiteSpace: 'pre-line' }}>
+            Para garantizar la mejor experiencia y respetar el tiempo de todos, te pedimos que estés disponible a la hora acordada. Próximamente, recibirás una llamada telefónica para confirmar los detalles. Si necesitas reprogramar, avísanos con antelación. Gracias por tu comprensión! 😊✨
+          </ListItem>
         </List>
       </Section>
 
