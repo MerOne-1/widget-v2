@@ -111,8 +111,6 @@ const ContentScroll = styled.div`
   }
 `;
 
-
-
 interface BookingPopupProps {
   onClose: () => void;
 }
@@ -208,9 +206,6 @@ export const BookingPopup: React.FC<BookingPopupProps> = ({ onClose }) => {
     }
   };
 
-
-
-
   return createPortal(
     <PopupOverlay onClick={(e) => {
       // Only close if clicking the overlay background
@@ -225,6 +220,7 @@ export const BookingPopup: React.FC<BookingPopupProps> = ({ onClose }) => {
           {currentStep === 'employee' && 'Choose Your Professional'}
           {currentStep === 'datetime' && 'Select Date & Time'}
           {currentStep === 'client-info' && 'Your Information'}
+          {currentStep === 'confirmation' && 'Booking Confirmed!'}
         </Title>
         
         <ContentScroll>
@@ -283,40 +279,52 @@ export const BookingPopup: React.FC<BookingPopupProps> = ({ onClose }) => {
               }}
             />
           )}
+          
+          {currentStep === 'confirmation' && clientInfo && (
+            <ConfirmationSection
+              bookingNumber={bookingNumber}
+              selectedServices={selectedServices}
+              clientInfo={clientInfo}
+              appointmentTime={selectedTime}
+              appointmentDate={selectedDate}
+            />
+          )}
         </ContentScroll>
 
-        <div style={{ display: 'flex', gap: '16px', marginTop: '24px' }}>
-          {currentStep !== 'services' && (
-            <BookButton
-              onClick={handleBack}
-              style={{ flex: 1, backgroundColor: '#f5f5f5', color: 'black' }}
-            >
-              Back
-            </BookButton>
-          )}
-          
-          {currentStep === 'client-info' ? (
-            <BookButton
-              disabled={!isClientInfoValid}
-              onClick={handleBooking}
-              style={{ flex: 1 }}
-            >
-              Book Now
-            </BookButton>
-          ) : (
-            <BookButton
-              disabled={
-                (currentStep === 'services' && selectedServices.length === 0) ||
-                (currentStep === 'employee' && !selectedEmployee) ||
-                (currentStep === 'datetime' && !isDateTimeValid)
-              }
-              onClick={handleNextStep}
-              style={{ flex: 1 }}
-            >
-              Next Step
-            </BookButton>
-          )}
-        </div>
+        {currentStep !== 'confirmation' && (
+          <div style={{ display: 'flex', gap: '16px', marginTop: '24px' }}>
+            {currentStep !== 'services' && (
+              <BookButton
+                onClick={handleBack}
+                style={{ flex: 1, backgroundColor: '#f5f5f5', color: 'black' }}
+              >
+                Back
+              </BookButton>
+            )}
+            
+            {currentStep === 'client-info' ? (
+              <BookButton
+                disabled={!isClientInfoValid}
+                onClick={handleBooking}
+                style={{ flex: 1 }}
+              >
+                Book Now
+              </BookButton>
+            ) : (
+              <BookButton
+                disabled={
+                  (currentStep === 'services' && selectedServices.length === 0) ||
+                  (currentStep === 'employee' && !selectedEmployee) ||
+                  (currentStep === 'datetime' && !isDateTimeValid)
+                }
+                onClick={handleNextStep}
+                style={{ flex: 1 }}
+              >
+                Next Step
+              </BookButton>
+            )}
+          </div>
+        )}
       </PopupContent>
     </PopupOverlay>,
     document.body
