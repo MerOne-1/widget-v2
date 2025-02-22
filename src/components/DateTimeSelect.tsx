@@ -152,7 +152,11 @@ export const DateTimeSelect: React.FC<DateTimeSelectProps> = ({
   const handlePreviousMonth = () => {
     const newMonth = new Date(currentMonth);
     newMonth.setMonth(newMonth.getMonth() - 1);
-    if (newMonth.getTime() >= today.getTime()) {
+    // Set the date to the first of the month to properly compare months
+    const startOfNewMonth = new Date(newMonth.getFullYear(), newMonth.getMonth(), 1);
+    const startOfCurrentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    
+    if (startOfNewMonth >= startOfCurrentMonth) {
       setCurrentMonth(newMonth);
     }
   };
