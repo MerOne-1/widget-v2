@@ -150,27 +150,27 @@ export const ClientInfoForm: React.FC<ClientInfoFormProps> = ({
     const newErrors: Partial<Record<keyof ClientInfo, string>> = {};
     
     if (!formData.firstName.trim()) {
-      newErrors.firstName = 'First name is required';
+      newErrors.firstName = 'El nombre es obligatorio';
     }
     
     if (!formData.lastName.trim()) {
-      newErrors.lastName = 'Last name is required';
+      newErrors.lastName = 'Los apellidos son obligatorios';
     }
     
     if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
+      newErrors.email = 'El email es obligatorio';
     } else if (!validateEmail(formData.email)) {
-      newErrors.email = 'Please enter a valid email';
+      newErrors.email = 'Por favor, introduce un email válido';
     }
     
     if (!formData.phone.trim()) {
-      newErrors.phone = 'Phone number is required';
+      newErrors.phone = 'El teléfono es obligatorio';
     } else if (!validatePhone(formData.phone)) {
-      newErrors.phone = 'Please enter a valid Spanish phone number';
+      newErrors.phone = 'Por favor, introduce un número de teléfono válido';
     }
     
     if (!formData.address.trim()) {
-      newErrors.address = 'Address is required';
+      newErrors.address = 'La dirección es obligatoria';
     }
 
     setErrors(newErrors);
@@ -181,27 +181,27 @@ export const ClientInfoForm: React.FC<ClientInfoFormProps> = ({
   return (
     <FormContainer>
       <SectionTitle>
-        Please fill in your details
+        Por favor, rellena tus datos
       </SectionTitle>
       <FormGroup>
         <InputGroup>
-          <Label>First Name</Label>
+          <Label>Nombre</Label>
           <Input
             type="text"
             value={formData.firstName}
             onChange={handleChange('firstName')}
-            placeholder="Enter your first name"
+            placeholder="Introduce tu nombre"
           />
           {errors.firstName && <ErrorMessage>{errors.firstName}</ErrorMessage>}
         </InputGroup>
 
         <InputGroup>
-          <Label>Last Name</Label>
+          <Label>Apellidos</Label>
           <Input
             type="text"
             value={formData.lastName}
             onChange={handleChange('lastName')}
-            placeholder="Enter your last name"
+            placeholder="Introduce tus apellidos"
           />
           {errors.lastName && <ErrorMessage>{errors.lastName}</ErrorMessage>}
         </InputGroup>
@@ -214,7 +214,7 @@ export const ClientInfoForm: React.FC<ClientInfoFormProps> = ({
             type="email"
             value={formData.email}
             onChange={handleChange('email')}
-            placeholder="Enter your email"
+            placeholder="Introduce tu email"
           />
           {errors.email && <ErrorMessage>{errors.email}</ErrorMessage>}
         </InputGroup>

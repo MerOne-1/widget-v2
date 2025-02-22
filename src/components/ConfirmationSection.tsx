@@ -106,42 +106,42 @@ export const ConfirmationSection: React.FC<ConfirmationSectionProps> = ({
   return (
     <Container>
       <SuccessIcon>✓</SuccessIcon>
-      <Title>Booking Confirmed!</Title>
-      <BookingNumber>Booking #{bookingNumber}</BookingNumber>
+      <Title>¡Reserva Confirmada!</Title>
+      <BookingNumber>Reserva #{bookingNumber}</BookingNumber>
 
       <Section>
-        <SectionTitle>Appointment Details</SectionTitle>
+        <SectionTitle>Detalles de la Cita</SectionTitle>
         <List>
-          <ListItem>Date: {appointmentDate}</ListItem>
-          <ListItem>Time: {appointmentTime}</ListItem>
-          <ListItem>Total Amount: ${totalAmount}</ListItem>
+          <ListItem>Fecha: {appointmentDate}</ListItem>
+          <ListItem>Hora: {appointmentTime}</ListItem>
+          <ListItem>Importe Total: {totalAmount}€</ListItem>
         </List>
       </Section>
 
       <Section>
-        <SectionTitle>Selected Services</SectionTitle>
+        <SectionTitle>Servicios Seleccionados</SectionTitle>
         <List>
           {selectedServices.map((service) => (
             <ListItem key={service.id}>
-              {service.name} - ${service.price}
+              {service.name} - {service.price}€
             </ListItem>
           ))}
         </List>
       </Section>
 
       <Section>
-        <SectionTitle>Important Information</SectionTitle>
+        <SectionTitle>Información Importante</SectionTitle>
         <List>
-          <ListItem>Please arrive 10 minutes before your appointment time</ListItem>
-          <ListItem>Cancellations must be made at least 24 hours in advance</ListItem>
-          <ListItem>Payment is required at the time of service</ListItem>
-          <ListItem>If you're running late, please call us to inform</ListItem>
+          <ListItem>Por favor, llega 10 minutos antes de tu cita</ListItem>
+          <ListItem>Las cancelaciones deben realizarse con al menos 24 horas de antelación</ListItem>
+          <ListItem>El pago se realizará en el momento del servicio</ListItem>
+          <ListItem>Si vas a llegar tarde, por favor llámanos para informarnos</ListItem>
         </List>
       </Section>
 
       <EmailNote>
-        A confirmation email has been sent to {clientInfo.email} with all these details.
-        Please check your spam folder if you haven't received it within 5 minutes.
+        Hemos enviado un email de confirmación a {clientInfo.email} con todos los detalles.
+        Por favor, revisa tu carpeta de spam si no lo has recibido en 5 minutos.
       </EmailNote>
     </Container>
   );

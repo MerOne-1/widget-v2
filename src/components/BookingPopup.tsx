@@ -216,11 +216,11 @@ export const BookingPopup: React.FC<BookingPopupProps> = ({ onClose }) => {
       <PopupContent onClick={(e) => e.stopPropagation()}>
         <CloseButton onClick={onClose}>&times;</CloseButton>
         <Title>
-          {currentStep === 'services' && 'Select Services'}
-          {currentStep === 'employee' && 'Choose Your Professional'}
-          {currentStep === 'datetime' && 'Select Date & Time'}
-          {currentStep === 'client-info' && 'Your Information'}
-          {currentStep === 'confirmation' && 'Booking Confirmed!'}
+          {currentStep === 'services' && 'Selecciona los Servicios'}
+          {currentStep === 'employee' && 'Elige tu Profesional'}
+          {currentStep === 'datetime' && 'Selecciona Fecha y Hora'}
+          {currentStep === 'client-info' && 'Tus Datos'}
+          {currentStep === 'confirmation' && '¡Reserva Confirmada!'}
         </Title>
         
         <ContentScroll>

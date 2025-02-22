@@ -129,7 +129,7 @@ export const DateTimeSelect: React.FC<DateTimeSelectProps> = ({
     onDateTimeSelect(selectedDate, time);
   };
 
-  const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const weekDays = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
   const timeSlots = generateTimeSlots();
 
   return (
