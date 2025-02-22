@@ -187,7 +187,11 @@ export const BookingPopup: React.FC<BookingPopupProps> = ({ onClose }) => {
   };
 
   const handleBooking = () => {
-    if (selectedServices.length > 0 && isClientInfoValid && clientInfo) {
+    if (selectedServices.length === 0) {
+      return;
+    }
+
+    if (isClientInfoValid && clientInfo) {
       // Generate a random booking number (in production this would come from the backend)
       const randomBookingNumber = Math.random().toString(36).substring(2, 10).toUpperCase();
       setBookingNumber(randomBookingNumber);

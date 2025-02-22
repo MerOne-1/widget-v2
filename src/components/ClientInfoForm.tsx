@@ -151,7 +151,7 @@ export const ClientInfoForm: React.FC<ClientInfoFormProps> = ({
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
 
-    // Validate on change only if form was previously submitted
+    // Only validate if form was previously submitted
     if (isSubmitted) {
       validateForm();
     }
@@ -197,9 +197,6 @@ export const ClientInfoForm: React.FC<ClientInfoFormProps> = ({
 
   return (
     <FormContainer>
-      <SectionTitle>
-        Por favor, rellena tus datos
-      </SectionTitle>
       <FormGroup>
         <InputGroup>
           <Label>Nombre</Label>
