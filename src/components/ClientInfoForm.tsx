@@ -8,7 +8,6 @@ const FormContainer = styled.div`
   gap: 32px;
   padding: 24px;
   background: linear-gradient(to bottom, #ffffff, #fafafa);
-  border: 1px solid ${theme.colors.border};
 `;
 
 const FormGroup = styled.div`
@@ -42,7 +41,7 @@ const InputGroup = styled.div`
 const baseInputStyles = `
   width: 100%;
   padding: 16px;
-  border: 2px solid ${theme.colors.border};
+  border: 2px solid ${theme.colors.containerBorder};
   border-radius: ${theme.borderRadius.default};
   font-family: ${theme.typography.fontFamily};
   font-size: ${theme.typography.text.size};

@@ -25,7 +25,7 @@ const PopupOverlay = styled.div`
 const PopupContent = styled.div`
   background: white;
   padding: 32px;
-  border: 2px solid ${theme.colors.border};
+  border: 2px solid ${theme.colors.containerBorder};
   border-radius: ${theme.borderRadius.default};
   position: relative;
   width: 90%;

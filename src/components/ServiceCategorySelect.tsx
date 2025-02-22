@@ -20,27 +20,23 @@ const CategoryHeader = styled.div<{ $isExpanded: boolean }>`
   cursor: pointer;
   background-color: white;
   text-transform: ${theme.typography.text.transform};
-  border-bottom: 2px solid ${theme.colors.border};
   display: flex;
   justify-content: space-between;
   align-items: center;
   position: sticky;
   top: 0;
   z-index: 1;
+  border-bottom: 2px solid ${theme.colors.containerBorder};
   
   &:hover {
-    background-color: #f8f8f8;
-  }
-
-  &:last-child {
-    border-bottom: none;
+    background-color: white;
   }
 
   &::after {
     content: '';
     width: 14px;
     height: 14px;
-    background-image: url('data:image/svg+xml;charset=US-ASCII,<svg width="14" height="8" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 1L7 7L13 1" stroke="%23F5BBC9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>');
+    background-image: url('data:image/svg+xml;charset=US-ASCII,<svg width="14" height="8" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 1L7 7L13 1" stroke="%23000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>');
     background-repeat: no-repeat;
     background-position: center;
     transform: ${props => props.$isExpanded ? 'rotate(180deg)' : 'rotate(0deg)'};
@@ -61,19 +57,22 @@ const ServiceList = styled.div<{ $isExpanded: boolean }>`
 
 const ServiceItem = styled.div<{ $isSelected: boolean }>`
   padding: 16px;
-  border-bottom: 1px solid ${theme.colors.border};
   cursor: pointer;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: ${props => props.$isSelected ? '#f8f8f8' : 'white'};
+  background-color: white;
+  border-bottom: 1px solid ${theme.colors.containerBorder};
+  border: ${props => props.$isSelected ? `2px solid ${theme.colors.containerBorder}` : 'none'};
+  border-radius: ${props => props.$isSelected ? theme.borderRadius.default : '0'};
+  margin: ${props => props.$isSelected ? '8px' : '0'};
   
   &:last-child {
-    border-bottom: none;
+    border-bottom: ${props => props.$isSelected ? 'none' : `1px solid ${theme.colors.containerBorder}`};
   }
   
   &:hover {
-    background-color: #f8f8f8;
+    background-color: ${props => props.$isSelected ? 'white' : '#f8f8f8'};
   }
 `;
 
@@ -110,9 +109,10 @@ interface ServiceCategorySelectProps {
 }
 
 const ServicesWrapper = styled.div`
-  border: 2px solid ${theme.colors.border};
+  border: 2px solid ${theme.colors.containerBorder};
   border-radius: ${theme.borderRadius.default};
   overflow: hidden;
+  background-color: white;
 `;
 
 const Summary = styled.div`

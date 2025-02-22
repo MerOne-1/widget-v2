@@ -1,11 +1,12 @@
 export const theme = {
   colors: {
-    border: '#000000',
+    containerBorder: '#000000',
+    border: '#F5BBC9',
     title: '#000000',
     text: '#000000',
     buttonText: '#FFFFFF',
     button: '#000000',
-    icon: '#000000',
+    icon: '#F5BBC9',
   },
   typography: {
     fontFamily: '"Poppins", sans-serif',

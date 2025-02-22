@@ -12,8 +12,8 @@ const Calendar = styled.div`
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 1px;
-  background-color: ${theme.colors.border};
-  border: 1px solid ${theme.colors.border};
+  background-color: ${theme.colors.containerBorder};
+  border: 2px solid ${theme.colors.containerBorder};
   border-radius: ${theme.borderRadius.default};
   overflow: hidden;
 `;
@@ -75,7 +75,7 @@ const TimeGrid = styled.div`
 
 const TimeSlot = styled.button<{ $isSelected?: boolean }>`
   padding: 12px;
-  border: 1px solid ${props => props.$isSelected ? theme.colors.button : theme.colors.border};
+  border: 2px solid ${props => props.$isSelected ? theme.colors.button : theme.colors.containerBorder};
   border-radius: ${theme.borderRadius.default};
   background-color: ${props => props.$isSelected ? theme.colors.button : 'white'};
   color: ${props => props.$isSelected ? 'white' : theme.colors.text};
