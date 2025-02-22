@@ -1,0 +1,301 @@
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
+import styled from 'styled-components';
+import { ServiceCategorySelect } from './ServiceCategorySelect';
+import { EmployeeSelect } from './EmployeeSelect';
+import { BookingForm } from './BookingForm';
+import { Service, sampleServices } from '../types/services';
+import { Employee, sampleEmployees } from '../types/employees';
+import { ClientInfoForm } from './ClientInfoForm';
+import { theme } from '../styles/theme';
+
+const PopupOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+`;
+
+const PopupContent = styled.div`
+  background: white;
+  padding: 32px;
+  border: 2px solid ${theme.colors.border};
+  border-radius: ${theme.borderRadius.default};
+  position: relative;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+`;
+
+const CloseButton = styled.button`
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: black;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.8;
+  
+  &:hover {
+    opacity: 1;
+  }
+`;
+
+const Title = styled.h2`
+  margin-bottom: 24px;
+  color: ${theme.colors.title};
+  font-size: ${theme.typography.title.size};
+  font-weight: ${theme.typography.title.weight};
+  text-transform: ${theme.typography.title.transform};
+  font-family: ${theme.typography.fontFamily};
+`;
+
+const BookButton = styled.button`
+  background-color: ${theme.colors.button};
+  color: ${theme.colors.buttonText};
+  padding: 16px 32px;
+  border: none;
+  border-radius: ${theme.borderRadius.button};
+  font-size: ${theme.typography.button.size};
+  font-weight: ${theme.typography.button.weight};
+  text-transform: ${theme.typography.button.transform};
+  font-family: ${theme.typography.fontFamily};
+  width: 100%;
+  cursor: pointer;
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
+const ContentScroll = styled.div`
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 8px;
+  margin-right: -8px;
+  
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 4px;
+    
+    &:hover {
+      background: rgba(0, 0, 0, 0.7);
+    }
+  }
+`;
+
+
+
+interface BookingPopupProps {
+  onClose: () => void;
+}
+
+type BookingStep = 'services' | 'employee' | 'datetime' | 'client-info';
+
+interface ClientInfo {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  address: string;
+  comments?: string;
+}
+
+export const BookingPopup: React.FC<BookingPopupProps> = ({ onClose }) => {
+  const [selectedServices, setSelectedServices] = useState<Service[]>([]);
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [isDateTimeValid, setIsDateTimeValid] = useState(false);
+  const [isClientInfoValid, setIsClientInfoValid] = useState(false);
+  const [clientInfo, setClientInfo] = useState<ClientInfo | null>(null);
+  const [currentStep, setCurrentStep] = useState<BookingStep>('services');
+
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [onClose]);
+
+  const handleServiceSelect = (services: Service[]) => {
+    setSelectedServices(services);
+  };
+
+  const handleNextStep = () => {
+    if (currentStep === 'services' && selectedServices.length > 0) {
+      const availableEmployees = sampleEmployees.filter(employee =>
+        selectedServices.every(service => employee.services.includes(service.id))
+      );
+      
+      if (availableEmployees.length === 1) {
+        setSelectedEmployee(availableEmployees[0]);
+        setCurrentStep('datetime');
+      } else {
+        setCurrentStep('employee');
+      }
+    } else if (currentStep === 'employee' && selectedEmployee) {
+      setCurrentStep('datetime');
+    } else if (currentStep === 'datetime' && isDateTimeValid) {
+      setCurrentStep('client-info');
+    }
+  };
+
+  const handleBack = () => {
+    if (currentStep === 'client-info') {
+      setCurrentStep('datetime');
+    } else if (currentStep === 'datetime') {
+      const availableEmployees = sampleEmployees.filter(employee =>
+        selectedServices.every(service => employee.services.includes(service.id))
+      );
+      
+      if (availableEmployees.length === 1) {
+        setCurrentStep('services');
+      } else {
+        setCurrentStep('employee');
+      }
+    } else if (currentStep === 'employee') {
+      setCurrentStep('services');
+    }
+  };
+
+  const handleBooking = () => {
+    if (selectedServices.length > 0 && isFormValid) {
+      console.log('Booking services:', selectedServices);
+      // To be implemented with Firebase in Phase 2
+    }
+  };
+
+  const handleFormValidityChange = (isValid: boolean) => {
+    setIsFormValid(isValid);
+  };
+
+
+
+  return createPortal(
+    <PopupOverlay onClick={onClose}>
+      <PopupContent onClick={(e) => e.stopPropagation()}>
+        <CloseButton onClick={onClose}>&times;</CloseButton>
+        <Title>
+          {currentStep === 'services' && 'Select Services'}
+          {currentStep === 'employee' && 'Choose Your Professional'}
+          {currentStep === 'datetime' && 'Select Date & Time'}
+          {currentStep === 'client-info' && 'Your Information'}
+        </Title>
+        
+        <ContentScroll>
+          {currentStep === 'services' && (
+            <ServiceCategorySelect
+              categories={sampleServices}
+              onServiceSelect={handleServiceSelect}
+              selectedServices={selectedServices}
+            />
+          )}
+
+          {currentStep === 'employee' && (
+            <EmployeeSelect
+              employees={sampleEmployees}
+              selectedServices={selectedServices}
+              selectedEmployee={selectedEmployee}
+              onEmployeeSelect={setSelectedEmployee}
+            />
+          )}
+
+          {currentStep === 'datetime' && (
+            <>
+              <div style={{ marginBottom: '24px' }}>
+                <h3 style={{ 
+                  margin: '0 0 8px 0',
+                  fontSize: theme.typography.title.size,
+                  fontWeight: theme.typography.title.weight,
+                  color: theme.colors.text
+                }}>
+                  {selectedEmployee?.name}
+                </h3>
+                <p style={{ 
+                  margin: 0,
+                  fontSize: theme.typography.text.size,
+                  color: theme.colors.text,
+                  opacity: 0.8
+                }}>
+                  {selectedEmployee?.role}
+                </p>
+              </div>
+              <BookingForm
+                onFormValidityChange={setIsDateTimeValid}
+              />
+            </>
+          )}
+
+          {currentStep === 'client-info' && (
+            <ClientInfoForm
+              onFormValidityChange={(isValid, data) => {
+                setIsClientInfoValid(isValid);
+                setClientInfo(data);
+              }}
+            />
+          )}
+        </ContentScroll>
+
+        <div style={{ display: 'flex', gap: '16px', marginTop: '24px' }}>
+          {currentStep !== 'services' && (
+            <BookButton
+              onClick={handleBack}
+              style={{ flex: 1, backgroundColor: '#f5f5f5', color: 'black' }}
+            >
+              Back
+            </BookButton>
+          )}
+          
+          {currentStep === 'client-info' ? (
+            <BookButton
+              disabled={!isClientInfoValid}
+              onClick={handleBooking}
+              style={{ flex: 1 }}
+            >
+              Book Now
+            </BookButton>
+          ) : (
+            <BookButton
+              disabled={
+                (currentStep === 'services' && selectedServices.length === 0) ||
+                (currentStep === 'employee' && !selectedEmployee) ||
+                (currentStep === 'datetime' && !isDateTimeValid)
+              }
+              onClick={handleNextStep}
+              style={{ flex: 1 }}
+            >
+              Next Step
+            </BookButton>
+          )}
+        </div>
+      </PopupContent>
+    </PopupOverlay>,
+    document.body
+  );
+};
