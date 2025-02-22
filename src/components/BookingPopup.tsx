@@ -308,7 +308,6 @@ export const BookingPopup: React.FC<BookingPopupProps> = ({ onClose }) => {
             
             {currentStep === 'client-info' ? (
               <BookButton
-                disabled={!isClientInfoValid}
                 onClick={handleBooking}
                 style={{ flex: 1 }}
               >

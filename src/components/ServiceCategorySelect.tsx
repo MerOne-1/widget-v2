@@ -62,14 +62,15 @@ const ServiceItem = styled.div<{ $isSelected: boolean }>`
   justify-content: space-between;
   align-items: center;
   background-color: white;
-  border-bottom: 1px solid ${theme.colors.containerBorder};
-  border: ${props => props.$isSelected ? `2px solid ${theme.colors.containerBorder}` : 'none'};
-  border-radius: ${props => props.$isSelected ? theme.borderRadius.default : '0'};
-  margin: ${props => props.$isSelected ? '8px' : '0'};
-  
-  &:last-child {
-    border-bottom: ${props => props.$isSelected ? 'none' : `1px solid ${theme.colors.containerBorder}`};
-  }
+  ${props => props.$isSelected ? `
+    border: 2px solid ${theme.colors.containerBorder};
+    border-radius: ${theme.borderRadius.default};
+    margin: 8px;
+  ` : `
+    border: none;
+    border-bottom: 1px solid ${theme.colors.containerBorder};
+    margin: 0;
+  `}
   
   &:hover {
     background-color: ${props => props.$isSelected ? 'white' : '#f8f8f8'};

@@ -190,10 +190,8 @@ export const ClientInfoForm: React.FC<ClientInfoFormProps> = ({
   };
 
   useEffect(() => {
-    if (isSubmitted) {
-      validateForm();
-    }
-  }, [formData, isSubmitted]);
+    validateForm();
+  }, [formData]);
 
   return (
     <FormContainer>
