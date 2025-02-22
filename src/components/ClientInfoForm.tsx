@@ -129,6 +129,7 @@ export const ClientInfoForm: React.FC<ClientInfoFormProps> = ({
   });
 
   const [errors, setErrors] = useState<Partial<Record<keyof ClientInfo, string>>>({});
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   const validateEmail = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -144,39 +145,55 @@ export const ClientInfoForm: React.FC<ClientInfoFormProps> = ({
   ) => {
     const value = e.target.value;
     setFormData(prev => ({ ...prev, [field]: value }));
+    
+    // Clear error for this field when user starts typing
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+
+    // Validate on change only if form was previously submitted
+    if (isSubmitted) {
+      validateForm();
+    }
   };
 
-  useEffect(() => {
+  const validateForm = () => {
     const newErrors: Partial<Record<keyof ClientInfo, string>> = {};
     
     if (!formData.firstName.trim()) {
-      newErrors.firstName = 'El nombre es obligatorio';
+      newErrors.firstName = 'Campo requerido';
     }
     
     if (!formData.lastName.trim()) {
-      newErrors.lastName = 'Los apellidos son obligatorios';
+      newErrors.lastName = 'Campo requerido';
     }
     
     if (!formData.email.trim()) {
-      newErrors.email = 'El email es obligatorio';
+      newErrors.email = 'Campo requerido';
     } else if (!validateEmail(formData.email)) {
-      newErrors.email = 'Por favor, introduce un email válido';
+      newErrors.email = 'Email no válido';
     }
     
     if (!formData.phone.trim()) {
-      newErrors.phone = 'El teléfono es obligatorio';
+      newErrors.phone = 'Campo requerido';
     } else if (!validatePhone(formData.phone)) {
-      newErrors.phone = 'Por favor, introduce un número de teléfono válido';
+      newErrors.phone = 'Teléfono no válido';
     }
     
     if (!formData.address.trim()) {
-      newErrors.address = 'La dirección es obligatoria';
+      newErrors.address = 'Campo requerido';
     }
 
     setErrors(newErrors);
     const isValid = Object.keys(newErrors).length === 0;
     onFormValidityChange(isValid, formData);
-  }, [formData, onFormValidityChange]);
+  };
+
+  useEffect(() => {
+    if (isSubmitted) {
+      validateForm();
+    }
+  }, [formData, isSubmitted]);
 
   return (
     <FormContainer>
@@ -220,7 +237,7 @@ export const ClientInfoForm: React.FC<ClientInfoFormProps> = ({
         </InputGroup>
 
         <InputGroup>
-          <Label>Phone Number</Label>
+          <Label>Teléfono</Label>
           <Input
             type="tel"
             value={formData.phone}
@@ -232,22 +249,22 @@ export const ClientInfoForm: React.FC<ClientInfoFormProps> = ({
       </FormGroup>
 
       <InputGroup>
-        <Label>Address</Label>
+        <Label>Dirección</Label>
         <Input
           type="text"
           value={formData.address}
           onChange={handleChange('address')}
-          placeholder="Enter your address in Madrid"
+          placeholder="Introduce tu dirección"
         />
         {errors.address && <ErrorMessage>{errors.address}</ErrorMessage>}
       </InputGroup>
 
       <InputGroup>
-        <Label>Comments (Optional)</Label>
+        <Label>Comentarios (Opcional)</Label>
         <TextArea
           value={formData.comments}
           onChange={handleChange('comments')}
-          placeholder="Add any additional comments or special requests"
+          placeholder="¿Alguna nota o petición especial?"
         />
       </InputGroup>
     </FormContainer>
