@@ -151,7 +151,7 @@ export const ServiceCategorySelect: React.FC<ServiceCategorySelectProps> = ({
   };
 
   const formatPrice = (price: number): string => {
-    return `$${price.toFixed(2)}`;
+    return `${price.toFixed(2)}€`;
   };
 
   const toggleCategory = (categoryId: string) => {
@@ -201,7 +201,7 @@ export const ServiceCategorySelect: React.FC<ServiceCategorySelectProps> = ({
 
       {selectedServices.length > 0 && (
         <Summary>
-          <SummaryTitle>Selected Services</SummaryTitle>
+          <SummaryTitle>Servicios Seleccionados</SummaryTitle>
           {selectedServices.map(service => (
             <SummaryDetail key={service.id}>
               <span>{service.name}</span>

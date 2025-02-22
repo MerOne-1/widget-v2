@@ -298,7 +298,7 @@ export const BookingPopup: React.FC<BookingPopupProps> = ({ onClose }) => {
                 onClick={handleBack}
                 style={{ flex: 1, backgroundColor: '#f5f5f5', color: 'black' }}
               >
-                Back
+                Volver
               </BookButton>
             )}
             
@@ -308,7 +308,7 @@ export const BookingPopup: React.FC<BookingPopupProps> = ({ onClose }) => {
                 onClick={handleBooking}
                 style={{ flex: 1 }}
               >
-                Book Now
+                Reservar Ahora
               </BookButton>
             ) : (
               <BookButton
@@ -320,7 +320,7 @@ export const BookingPopup: React.FC<BookingPopupProps> = ({ onClose }) => {
                 onClick={handleNextStep}
                 style={{ flex: 1 }}
               >
-                Next Step
+                Siguiente
               </BookButton>
             )}
           </div>
