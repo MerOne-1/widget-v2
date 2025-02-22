@@ -12,7 +12,7 @@ const Calendar = styled.div`
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 1px;
-  background-color: ${theme.colors.containerBorder};
+  background-color: ${theme.colors.border};
   border: 2px solid ${theme.colors.containerBorder};
   border-radius: ${theme.borderRadius.default};
   overflow: hidden;
