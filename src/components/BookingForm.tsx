@@ -4,14 +4,30 @@ import { DateTimeSelect } from './DateTimeSelect';
 
 
 interface BookingFormProps {
-  onFormValidityChange: (isValid: boolean) => void;
+  onValidityChange: (isValid: boolean) => void;
+  onDateSelect: (date: string) => void;
+  onTimeSelect: (time: string) => void;
 }
 
 export const BookingForm: React.FC<BookingFormProps> = ({
-  onFormValidityChange
+  onValidityChange,
+  onDateSelect,
+  onTimeSelect
 }) => {
   const handleDateTimeSelect = (date: Date | null, time: string | null) => {
-    onFormValidityChange(date !== null && time !== null);
+    const isValid = date !== null && time !== null;
+    onValidityChange(isValid);
+    
+    if (isValid && date && time) {
+      const formattedDate = date.toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+      onDateSelect(formattedDate);
+      onTimeSelect(time);
+    }
   };
 
   return <DateTimeSelect onDateTimeSelect={handleDateTimeSelect} />;

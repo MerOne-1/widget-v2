@@ -7,6 +7,7 @@ import { BookingForm } from './BookingForm';
 import { Service, sampleServices } from '../types/services';
 import { Employee, sampleEmployees } from '../types/employees';
 import { ClientInfoForm } from './ClientInfoForm';
+import { ConfirmationSection } from './ConfirmationSection';
 import { theme } from '../styles/theme';
 
 const PopupOverlay = styled.div`
@@ -116,7 +117,7 @@ interface BookingPopupProps {
   onClose: () => void;
 }
 
-type BookingStep = 'services' | 'employee' | 'datetime' | 'client-info';
+type BookingStep = 'services' | 'employee' | 'datetime' | 'client-info' | 'confirmation';
 
 interface ClientInfo {
   firstName: string;
@@ -134,6 +135,9 @@ export const BookingPopup: React.FC<BookingPopupProps> = ({ onClose }) => {
   const [isClientInfoValid, setIsClientInfoValid] = useState(false);
   const [clientInfo, setClientInfo] = useState<ClientInfo | null>(null);
   const [currentStep, setCurrentStep] = useState<BookingStep>('services');
+  const [selectedDate, setSelectedDate] = useState<string>('');
+  const [selectedTime, setSelectedTime] = useState<string>('');
+  const [bookingNumber, setBookingNumber] = useState<string>('');
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -185,20 +189,35 @@ export const BookingPopup: React.FC<BookingPopupProps> = ({ onClose }) => {
   };
 
   const handleBooking = () => {
-    if (selectedServices.length > 0 && isFormValid) {
-      console.log('Booking services:', selectedServices);
-      // To be implemented with Firebase in Phase 2
+    if (selectedServices.length > 0 && isClientInfoValid && clientInfo) {
+      // Generate a random booking number (in production this would come from the backend)
+      const randomBookingNumber = Math.random().toString(36).substring(2, 10).toUpperCase();
+      setBookingNumber(randomBookingNumber);
+      
+      // Here you would typically submit the booking to your backend
+      console.log('Booking submitted:', {
+        bookingNumber: randomBookingNumber,
+        services: selectedServices,
+        employee: selectedEmployee,
+        date: selectedDate,
+        time: selectedTime,
+        clientInfo: clientInfo,
+      });
+      
+      setCurrentStep('confirmation');
     }
   };
 
-  const handleFormValidityChange = (isValid: boolean) => {
-    setIsFormValid(isValid);
-  };
 
 
 
   return createPortal(
-    <PopupOverlay onClick={onClose}>
+    <PopupOverlay onClick={(e) => {
+      // Only close if clicking the overlay background
+      if (e.target === e.currentTarget) {
+        onClose();
+      }
+    }}>
       <PopupContent onClick={(e) => e.stopPropagation()}>
         <CloseButton onClick={onClose}>&times;</CloseButton>
         <Title>
@@ -247,7 +266,9 @@ export const BookingPopup: React.FC<BookingPopupProps> = ({ onClose }) => {
                 </p>
               </div>
               <BookingForm
-                onFormValidityChange={setIsDateTimeValid}
+                onValidityChange={setIsDateTimeValid}
+                onDateSelect={setSelectedDate}
+                onTimeSelect={setSelectedTime}
               />
             </>
           )}
@@ -256,7 +277,9 @@ export const BookingPopup: React.FC<BookingPopupProps> = ({ onClose }) => {
             <ClientInfoForm
               onFormValidityChange={(isValid, data) => {
                 setIsClientInfoValid(isValid);
-                setClientInfo(data);
+                if (data) {
+                  setClientInfo(data);
+                }
               }}
             />
           )}

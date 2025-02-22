@@ -100,6 +100,7 @@ export const DateTimeSelect: React.FC<DateTimeSelectProps> = ({
   
   // Generate calendar data
   const today = new Date();
+  const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
   const currentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
   const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
   const firstDayOfMonth = currentMonth.getDay();
@@ -145,7 +146,7 @@ export const DateTimeSelect: React.FC<DateTimeSelectProps> = ({
           const date = new Date(today.getFullYear(), today.getMonth(), day);
           const isToday = day === today.getDate();
           const isSelected = selectedDate?.getDate() === day;
-          const isPast = date < new Date(today.setHours(0, 0, 0, 0));
+          const isPast = date < startOfToday;
 
           return (
             <Day
