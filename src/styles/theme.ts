@@ -1,4 +1,10 @@
-export const theme = {
+export const breakpoints = {
+  mobile: '480px',
+  tablet: '768px',
+  desktop: '1024px',
+} as const;
+
+const theme = {
   colors: {
     containerBorder: '#000000',
     border: '#F5BBC9',

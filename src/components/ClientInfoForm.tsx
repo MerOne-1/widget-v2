@@ -8,15 +8,24 @@ const FormContainer = styled.div`
   gap: 32px;
   padding: 24px;
   background: linear-gradient(to bottom, #ffffff, #fafafa);
+
+  @media (max-width: 480px) {
+    padding: 16px;
+    gap: 24px;
+  }
 `;
 
 const FormGroup = styled.div`
   display: flex;
   gap: 24px;
   
-  @media (max-width: 600px) {
+  @media (max-width: 768px) {
     flex-direction: column;
     gap: 16px;
+  }
+
+  @media (max-width: 480px) {
+    gap: 12px;
   }
 `;
 
@@ -48,6 +57,16 @@ const baseInputStyles = `
   color: ${theme.colors.text};
   background-color: white;
   transition: all 0.2s ease;
+
+  @media (max-width: 768px) {
+    padding: 14px;
+    font-size: 14px;
+  }
+
+  @media (max-width: 480px) {
+    padding: 12px;
+    font-size: 16px; /* Larger on mobile for better tap targets */
+  }
   
   &:hover {
     border-color: ${theme.colors.button}80;

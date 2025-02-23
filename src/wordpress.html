@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Booking Widget</title>
+    <!-- This will be replaced by WordPress enqueued scripts -->
+    <script defer src="/dist/booking-widget.js"></script>
+</head>
+<body>
+    <!-- Container for the widget -->
+    <div id="booking-widget-container"></div>
+
+    <!-- Example of how to initialize in WordPress -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize widget when document is ready
+            if (window.initBookingWidget) {
+                window.initBookingWidget();
+            }
+        });
+    </script>
+</body>
+</html>

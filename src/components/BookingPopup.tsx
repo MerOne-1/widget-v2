@@ -21,6 +21,12 @@ const PopupOverlay = styled.div`
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  padding: 16px;
+
+  @media (max-width: 480px) {
+    padding: 0;
+    align-items: flex-end;
+  }
 `;
 
 const PopupContent = styled.div`
@@ -34,7 +40,22 @@ const PopupContent = styled.div`
   max-height: 90vh;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+
+  @media (max-width: 768px) {
+    padding: 24px;
+    width: 95%;
+  }
+
+  @media (max-width: 480px) {
+    padding: 20px;
+    width: 100%;
+    height: 85vh;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    border-bottom: none;
+  }
 `;
 
 const CloseButton = styled.button`
@@ -49,6 +70,26 @@ const CloseButton = styled.button`
   width: 32px;
   height: 32px;
   display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  
+  @media (max-width: 480px) {
+    top: 12px;
+    right: 12px;
+    width: 28px;
+    height: 28px;
+    font-size: 20px;
+  }
+
+  &:hover {
+    opacity: 0.8;
+  }
+
+  &:active {
+    opacity: 0.6;
+  }
+
   align-items: center;
   justify-content: center;
   opacity: 0.8;
