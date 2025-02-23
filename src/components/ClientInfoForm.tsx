@@ -146,7 +146,8 @@ export const ClientInfoForm: React.FC<ClientInfoFormProps> = ({
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const value = e.target.value;
-    setFormData(prev => ({ ...prev, [field]: value }));
+    const newFormData = { ...formData, [field]: value };
+    setFormData(newFormData);
     
     // Clear error for this field
     if (errors[field]) {
@@ -154,50 +155,54 @@ export const ClientInfoForm: React.FC<ClientInfoFormProps> = ({
       delete newErrors[field];
       setErrors(newErrors);
     }
+
+    // Validate the form with the new value
+    validate(false);
   };
 
 
 
   // Set up validation function reference once
+  const validate = React.useCallback((showErrors: boolean) => {
+    const newErrors: Partial<Record<keyof ClientInfo, string>> = {};
+    
+    // Check all required fields and formats
+    const isFirstNameValid = formData.firstName.trim() !== '';
+    const isLastNameValid = formData.lastName.trim() !== '';
+    const isEmailValid = formData.email.trim() !== '' && validateEmail(formData.email);
+    const isPhoneValid = formData.phone.trim() !== '' && validatePhone(formData.phone);
+    const isAddressValid = formData.address.trim() !== '';
+
+    // Set appropriate error messages
+    if (!isFirstNameValid) newErrors.firstName = 'Campo requerido';
+    if (!isLastNameValid) newErrors.lastName = 'Campo requerido';
+    if (!formData.email.trim()) newErrors.email = 'Campo requerido';
+    else if (!validateEmail(formData.email)) newErrors.email = 'Email no válido';
+    if (!formData.phone.trim()) newErrors.phone = 'Campo requerido';
+    else if (!validatePhone(formData.phone)) newErrors.phone = 'Teléfono no válido';
+    if (!isAddressValid) newErrors.address = 'Campo requerido';
+
+    // Update UI if showing errors
+    if (showErrors) {
+      setErrors(newErrors);
+      setShowErrors(true);
+    }
+
+    // Check if all fields are valid
+    const isValid = isFirstNameValid && isLastNameValid && isEmailValid && isPhoneValid && isAddressValid;
+    
+    // Update parent component
+    onFormValidityChange(isValid, formData);
+  }, [formData, validateEmail, validatePhone, onFormValidityChange]);
+
   useEffect(() => {
-    const validate = (showErrors: boolean) => {
-      const newErrors: Partial<Record<keyof ClientInfo, string>> = {};
-      
-      if (!formData.firstName.trim()) {
-        newErrors.firstName = 'Campo requerido';
-      }
-      
-      if (!formData.lastName.trim()) {
-        newErrors.lastName = 'Campo requerido';
-      }
-      
-      if (!formData.email.trim()) {
-        newErrors.email = 'Campo requerido';
-      } else if (!validateEmail(formData.email)) {
-        newErrors.email = 'Email no válido';
-      }
-      
-      if (!formData.phone.trim()) {
-        newErrors.phone = 'Campo requerido';
-      } else if (!validatePhone(formData.phone)) {
-        newErrors.phone = 'Teléfono no válido';
-      }
-      
-      if (!formData.address.trim()) {
-        newErrors.address = 'Campo requerido';
-      }
-
-      if (showErrors) {
-        setErrors(newErrors);
-        setShowErrors(true);
-      }
-
-      const isValid = Object.keys(newErrors).length === 0;
-      onFormValidityChange(isValid, formData);
-    };
-
     onValidateRef(validate);
-  }, [onValidateRef, formData, validateEmail, validatePhone, onFormValidityChange]);
+  }, [onValidateRef, validate]);
+
+  // Run initial validation
+  useEffect(() => {
+    validate(false);
+  }, [validate]);
 
   return (
     <FormContainer>

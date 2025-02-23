@@ -194,14 +194,16 @@ export const BookingPopup: React.FC<BookingPopupProps> = ({ onClose }) => {
 
     // Show validation errors when clicking Reservar Ahora
     if (currentStep === 'client-info') {
-      if (validateFormRef.current) {
-        validateFormRef.current(true);
-        // Give time for validation to complete
-        if (!isClientInfoValid) {
-          return;
-        }
-      } else {
+      if (!validateFormRef.current) {
         return; // Don't proceed if validation function is not available
+      }
+
+      // Run validation
+      validateFormRef.current(true);
+
+      // Check if form is valid
+      if (!isClientInfoValid) {
+        return;
       }
     }
 
