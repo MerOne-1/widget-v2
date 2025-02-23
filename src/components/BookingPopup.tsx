@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import styled from 'styled-components';
 import { ServiceCategorySelect } from './ServiceCategorySelect';
@@ -132,6 +132,7 @@ export const BookingPopup: React.FC<BookingPopupProps> = ({ onClose }) => {
   const [isDateTimeValid, setIsDateTimeValid] = useState(false);
   const [isClientInfoValid, setIsClientInfoValid] = useState(false);
   const [clientInfo, setClientInfo] = useState<ClientInfo | null>(null);
+  const validateFormRef = useRef<((showErrors: boolean) => void) | null>(null);
   const [currentStep, setCurrentStep] = useState<BookingStep>('services');
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [selectedTime, setSelectedTime] = useState<string>('');
@@ -189,6 +190,19 @@ export const BookingPopup: React.FC<BookingPopupProps> = ({ onClose }) => {
   const handleBooking = () => {
     if (selectedServices.length === 0) {
       return;
+    }
+
+    // Show validation errors when clicking Reservar Ahora
+    if (currentStep === 'client-info') {
+      if (validateFormRef.current) {
+        validateFormRef.current(true);
+        // Give time for validation to complete
+        if (!isClientInfoValid) {
+          return;
+        }
+      } else {
+        return; // Don't proceed if validation function is not available
+      }
     }
 
     if (isClientInfoValid && clientInfo) {
@@ -280,6 +294,9 @@ export const BookingPopup: React.FC<BookingPopupProps> = ({ onClose }) => {
                 if (data) {
                   setClientInfo(data);
                 }
+              }}
+              onValidateRef={fn => {
+                validateFormRef.current = fn;
               }}
             />
           )}

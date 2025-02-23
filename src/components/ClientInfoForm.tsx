@@ -114,10 +114,12 @@ interface ClientInfo {
 
 interface ClientInfoFormProps {
   onFormValidityChange: (isValid: boolean, data: ClientInfo) => void;
+  onValidateRef: (validateFn: (showErrors: boolean) => void) => void;
 }
 
 export const ClientInfoForm: React.FC<ClientInfoFormProps> = ({
-  onFormValidityChange
+  onFormValidityChange,
+  onValidateRef
 }) => {
   const [formData, setFormData] = useState<ClientInfo>({
     firstName: '',
@@ -129,7 +131,7 @@ export const ClientInfoForm: React.FC<ClientInfoFormProps> = ({
   });
 
   const [errors, setErrors] = useState<Partial<Record<keyof ClientInfo, string>>>({});
-  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [showErrors, setShowErrors] = useState(false);
 
   const validateEmail = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -146,52 +148,56 @@ export const ClientInfoForm: React.FC<ClientInfoFormProps> = ({
     const value = e.target.value;
     setFormData(prev => ({ ...prev, [field]: value }));
     
-    // Clear error for this field when user starts typing
+    // Clear error for this field
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
-    }
-
-    // Only validate if form was previously submitted
-    if (isSubmitted) {
-      validateForm();
+      const newErrors = { ...errors };
+      delete newErrors[field];
+      setErrors(newErrors);
     }
   };
 
-  const validateForm = () => {
-    const newErrors: Partial<Record<keyof ClientInfo, string>> = {};
-    
-    if (!formData.firstName.trim()) {
-      newErrors.firstName = 'Campo requerido';
-    }
-    
-    if (!formData.lastName.trim()) {
-      newErrors.lastName = 'Campo requerido';
-    }
-    
-    if (!formData.email.trim()) {
-      newErrors.email = 'Campo requerido';
-    } else if (!validateEmail(formData.email)) {
-      newErrors.email = 'Email no válido';
-    }
-    
-    if (!formData.phone.trim()) {
-      newErrors.phone = 'Campo requerido';
-    } else if (!validatePhone(formData.phone)) {
-      newErrors.phone = 'Teléfono no válido';
-    }
-    
-    if (!formData.address.trim()) {
-      newErrors.address = 'Campo requerido';
-    }
 
-    setErrors(newErrors);
-    const isValid = Object.keys(newErrors).length === 0;
-    onFormValidityChange(isValid, formData);
-  };
 
+  // Set up validation function reference once
   useEffect(() => {
-    validateForm();
-  }, [formData]);
+    const validate = (showErrors: boolean) => {
+      const newErrors: Partial<Record<keyof ClientInfo, string>> = {};
+      
+      if (!formData.firstName.trim()) {
+        newErrors.firstName = 'Campo requerido';
+      }
+      
+      if (!formData.lastName.trim()) {
+        newErrors.lastName = 'Campo requerido';
+      }
+      
+      if (!formData.email.trim()) {
+        newErrors.email = 'Campo requerido';
+      } else if (!validateEmail(formData.email)) {
+        newErrors.email = 'Email no válido';
+      }
+      
+      if (!formData.phone.trim()) {
+        newErrors.phone = 'Campo requerido';
+      } else if (!validatePhone(formData.phone)) {
+        newErrors.phone = 'Teléfono no válido';
+      }
+      
+      if (!formData.address.trim()) {
+        newErrors.address = 'Campo requerido';
+      }
+
+      if (showErrors) {
+        setErrors(newErrors);
+        setShowErrors(true);
+      }
+
+      const isValid = Object.keys(newErrors).length === 0;
+      onFormValidityChange(isValid, formData);
+    };
+
+    onValidateRef(validate);
+  }, [onValidateRef, formData, validateEmail, validatePhone, onFormValidityChange]);
 
   return (
     <FormContainer>
