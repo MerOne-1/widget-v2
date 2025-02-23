@@ -32,7 +32,7 @@ const PopupOverlay = styled.div`
   }
 `;
 
-const PopupContent = styled.div`
+const PopupContent = styled.div.attrs({ id: 'popup-content' })`
   background: white;
   padding: 32px;
   border: 2px solid ${theme.colors.containerBorder};
@@ -245,6 +245,11 @@ export const BookingPopup: React.FC<BookingPopupProps> = ({ onClose }) => {
     } else if (currentStep === 'datetime' && isDateTimeValid) {
       setCurrentStep('client-info');
     }
+    // Scroll to top when changing sections
+    const content = document.getElementById('popup-content');
+    if (content) {
+      setTimeout(() => content.scrollTo({ top: 0, behavior: 'smooth' }), 100);
+    }
   };
 
   const handleBack = () => {
@@ -262,6 +267,11 @@ export const BookingPopup: React.FC<BookingPopupProps> = ({ onClose }) => {
       }
     } else if (currentStep === 'employee') {
       setCurrentStep('services');
+    }
+    // Scroll to top when changing sections
+    const content = document.getElementById('popup-content');
+    if (content) {
+      setTimeout(() => content.scrollTo({ top: 0, behavior: 'smooth' }), 100);
     }
   };
 
