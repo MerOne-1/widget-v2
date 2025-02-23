@@ -22,60 +22,12 @@
         border: 2px solid #ccc;
         margin: 20px 0;
       }
-      #debug {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background: #000;
-        color: #fff;
-        padding: 10px;
-        font-family: monospace;
-        white-space: pre;
-        max-height: 200px;
-        overflow: auto;
-      }
+
     </style>
   </head>
   <body>
-    <div id="debug">Initializing debug panel...</div>
     <div id="root">If you see this message without styles, the page is loading...</div>
-    <script>
-      const debug = document.getElementById('debug');
-      const log = console.log;
-      const error = console.error;
-      const warn = console.warn;
-      
-      function addToDebug(type, args) {
-        const msg = args.map(arg => 
-          typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
-        ).join(' ');
-        debug.textContent += `\n[${type}] ${msg}`;
-        debug.scrollTop = debug.scrollHeight;
-      }
 
-      console.log = (...args) => {
-        log.apply(console, args);
-        addToDebug('LOG', args);
-      };
-      console.error = (...args) => {
-        error.apply(console, args);
-        addToDebug('ERROR', args);
-      };
-      console.warn = (...args) => {
-        warn.apply(console, args);
-        addToDebug('WARN', args);
-      };
-
-      console.log('Debug panel initialized');
-      console.log('Window loaded at:', new Date().toISOString());
-      console.log('User Agent:', navigator.userAgent);
-
-      window.onerror = function(msg, url, lineNo, columnNo, error) {
-        console.error('Global error:', msg, '\nAt:', url, ':', lineNo, ':', columnNo);
-        return false;
-      };
-    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
