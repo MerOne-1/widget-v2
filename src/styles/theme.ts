@@ -24,7 +24,7 @@ export const theme = {
     text: {
       size: '14px',
       weight: 400,
-      transform: 'capitalize',
+      transform: 'none',
     },
     button: {
       size: '14px',

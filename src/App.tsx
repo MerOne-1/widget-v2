@@ -1,8 +1,6 @@
-import { useEffect } from 'react';
 import styled from 'styled-components';
 import { GlobalStyles } from './styles/GlobalStyles';
 import DevPage from './pages/DevPage';
-import { DebugLogger } from './components/DebugLogger';
 
 const AppContainer = styled.div`
   min-height: 100vh;
@@ -28,17 +26,6 @@ const TestBox = styled.div`
 `;
 
 function App() {
-  useEffect(() => {
-    console.log('App component mounted');
-    console.log('Current environment:', import.meta.env);
-    
-    try {
-      throw new Error('Test error logging');
-    } catch (error) {
-      console.error('Caught test error:', error);
-    }
-  }, []);
-
   return (
     <>
       <GlobalStyles />
@@ -49,7 +36,6 @@ function App() {
         </TestBox>
         <DevPage />
       </AppContainer>
-      <DebugLogger />
     </>
   );
 }
