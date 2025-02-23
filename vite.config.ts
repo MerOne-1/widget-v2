@@ -17,7 +17,7 @@ export default defineConfig({
     cssMinify: true,
     rollupOptions: {
       input: {
-        'booking-widget': './src/wordpress.tsx',
+        'index': './index.html'
       },
       output: {
         entryFileNames: '[name].js',
