@@ -20,19 +20,15 @@ const PopupOverlay = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 9999;
   padding: 16px;
-  overscroll-behavior: contain;
+  overscroll-behavior: none;
+  touch-action: none;
   -webkit-overflow-scrolling: touch;
 
   @media (max-width: 480px) {
     padding: 0;
     align-items: flex-start;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
   }
 `;
 
@@ -49,8 +45,8 @@ const PopupContent = styled.div`
   flex-direction: column;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  transform: translateZ(0); /* Force hardware acceleration */
-  will-change: transform; /* Optimize for animations */
+  transform: translateZ(0);
+  will-change: transform;
 
   @media (max-width: 768px) {
     padding: 24px;
@@ -61,8 +57,8 @@ const PopupContent = styled.div`
   @media (max-width: 480px) {
     padding: 20px;
     width: 100%;
-    max-height: 100vh;
-    height: 100vh;
+    height: 100%;
+    max-height: 100%;
     border-radius: 0;
     border: none;
     margin: 0;
@@ -71,6 +67,8 @@ const PopupContent = styled.div`
     left: 0;
     right: 0;
     bottom: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
 `;
 
@@ -189,23 +187,22 @@ export const BookingPopup: React.FC<BookingPopupProps> = ({ onClose }) => {
 
   // Prevent body scroll when popup is open
   useEffect(() => {
-    if (window.innerWidth <= 480) { // Only for mobile devices
+    if (window.innerWidth <= 480) {
       const scrollY = window.scrollY;
-      const originalStyle = window.getComputedStyle(document.body).overflow;
-      
-      // Apply styles immediately to prevent any flash
-      document.body.style.overflow = 'hidden';
-      document.body.style.position = 'fixed';
-      document.body.style.width = '100%';
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.height = '100%';
+      document.documentElement.style.setProperty('overflow', 'hidden', 'important');
+      document.body.style.setProperty('overflow', 'hidden', 'important');
+      document.body.style.setProperty('position', 'fixed', 'important');
+      document.body.style.setProperty('top', `-${scrollY}px`, 'important');
+      document.body.style.setProperty('width', '100%', 'important');
+      document.body.style.setProperty('touch-action', 'none', 'important');
 
       return () => {
-        document.body.style.overflow = originalStyle;
-        document.body.style.position = '';
-        document.body.style.width = '';
-        document.body.style.top = '';
-        document.body.style.height = '';
+        document.documentElement.style.removeProperty('overflow');
+        document.body.style.removeProperty('overflow');
+        document.body.style.removeProperty('position');
+        document.body.style.removeProperty('top');
+        document.body.style.removeProperty('width');
+        document.body.style.removeProperty('touch-action');
         window.scrollTo(0, scrollY);
       };
     }
