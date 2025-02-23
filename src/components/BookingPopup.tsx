@@ -141,7 +141,7 @@ const BookButton = styled.button`
   }
 `;
 
-const ContentScroll = styled.div`
+const ContentScroll = styled.div.attrs({ id: 'content-scroll' })`
   flex: 1;
   overflow-y: auto;
   padding-right: 8px;
@@ -223,6 +223,14 @@ export const BookingPopup: React.FC<BookingPopupProps> = ({ onClose }) => {
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
   }, [onClose]);
+
+  // Handle scroll position when step changes
+  useEffect(() => {
+    const contentScroll = document.getElementById('content-scroll');
+    if (contentScroll) {
+      contentScroll.scrollTop = 0;
+    }
+  }, [currentStep]);
 
   const handleServiceSelect = (services: Service[]) => {
     setSelectedServices(services);
