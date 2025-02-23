@@ -22,6 +22,8 @@ const PopupOverlay = styled.div`
   align-items: center;
   z-index: 1000;
   padding: 16px;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 
   @media (max-width: 480px) {
     padding: 0;
@@ -42,6 +44,8 @@ const PopupContent = styled.div`
   flex-direction: column;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  transform: translateZ(0); /* Force hardware acceleration */
+  will-change: transform; /* Optimize for animations */
 
   @media (max-width: 768px) {
     padding: 24px;
@@ -57,6 +61,11 @@ const PopupContent = styled.div`
     border-radius: 0;
     border: none;
     margin: 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
   }
 `;
 
@@ -172,6 +181,24 @@ interface ClientInfo {
 export const BookingPopup: React.FC<BookingPopupProps> = ({ onClose }) => {
   const [selectedServices, setSelectedServices] = useState<Service[]>([]);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+
+  // Prevent body scroll when popup is open
+  useEffect(() => {
+    const originalStyle = window.getComputedStyle(document.body).overflow;
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.width = '100%';
+    document.body.style.top = `-${window.scrollY}px`;
+
+    return () => {
+      const scrollY = document.body.style.top;
+      document.body.style.overflow = originalStyle;
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.top = '';
+      window.scrollTo(0, parseInt(scrollY || '0') * -1);
+    };
+  }, []);
   const [isDateTimeValid, setIsDateTimeValid] = useState(false);
   const [isClientInfoValid, setIsClientInfoValid] = useState(false);
   const [clientInfo, setClientInfo] = useState<ClientInfo | null>(null);
