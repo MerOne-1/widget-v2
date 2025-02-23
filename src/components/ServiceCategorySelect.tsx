@@ -86,7 +86,7 @@ const ServiceName = styled.h3`
   font-size: ${theme.typography.title.size};
   font-weight: ${theme.typography.title.weight};
   color: ${theme.colors.title};
-  text-transform: ${theme.typography.title.transform};
+  text-transform: none;
 `;
 
 const ServiceDetails = styled.div`
