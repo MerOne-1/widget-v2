@@ -33,6 +33,8 @@ function App() {
         <Header>Booking Widget Development</Header>
         <TestBox>
           If you can see this box with pink background, styled-components is working!
+          <br />
+          <strong>Test message - deployed at 13:53 on Feb 23</strong>
         </TestBox>
         <DevPage />
       </AppContainer>
