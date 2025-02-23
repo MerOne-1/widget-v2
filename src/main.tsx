@@ -1,7 +1,9 @@
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { ThemeProvider } from 'styled-components';
 import App from './App';
 import ErrorBoundary from './components/ErrorBoundary';
+import { theme } from './styles/theme';
 
 console.log('Starting application initialization...');
 console.log('React version:', React?.version);
@@ -28,7 +30,9 @@ function initializeApp() {
   reactRoot.render(
     <StrictMode>
       <ErrorBoundary>
-        <App />
+        <ThemeProvider theme={theme}>
+          <App />
+        </ThemeProvider>
       </ErrorBoundary>
     </StrictMode>
   );

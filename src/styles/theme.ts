@@ -4,7 +4,7 @@ export const breakpoints = {
   desktop: '1024px',
 } as const;
 
-const theme = {
+export const theme = {
   colors: {
     containerBorder: '#000000',
     border: '#F5BBC9',

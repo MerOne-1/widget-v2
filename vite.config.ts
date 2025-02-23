@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-export default defineConfig(({ command }) => ({
+export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
@@ -12,8 +12,8 @@ export default defineConfig(({ command }) => ({
   build: {
     // Optimize build for WordPress integration
     target: 'es2015',
-    minify: command === 'build',
-    cssMinify: command === 'build',
+    minify: true,
+    cssMinify: true,
     rollupOptions: {
       input: {
         'booking-widget': './src/wordpress.tsx',
