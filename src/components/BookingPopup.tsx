@@ -25,7 +25,7 @@ const PopupOverlay = styled.div`
 
   @media (max-width: 480px) {
     padding: 0;
-    align-items: flex-end;
+    align-items: flex-start;
   }
 `;
 
@@ -46,15 +46,17 @@ const PopupContent = styled.div`
   @media (max-width: 768px) {
     padding: 24px;
     width: 95%;
+    max-height: 95vh;
   }
 
   @media (max-width: 480px) {
     padding: 20px;
     width: 100%;
-    height: 85vh;
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
-    border-bottom: none;
+    max-height: 100vh;
+    height: 100vh;
+    border-radius: 0;
+    border: none;
+    margin: 0;
   }
 `;
 
