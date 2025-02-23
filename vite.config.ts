@@ -2,7 +2,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig({
-  base: '/widget-v2/',
+  base: './',
   plugins: [react()],
   server: {
     port: 5173,
@@ -16,9 +16,7 @@ export default defineConfig({
     minify: true,
     cssMinify: true,
     rollupOptions: {
-      input: {
-        'booking-widget': './src/wordpress.tsx',
-      },
+      input: 'index.html',
       output: {
         entryFileNames: '[name].js',
         chunkFileNames: '[name].[hash].js',
