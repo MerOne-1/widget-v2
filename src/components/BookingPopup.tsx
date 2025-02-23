@@ -28,6 +28,11 @@ const PopupOverlay = styled.div`
   @media (max-width: 480px) {
     padding: 0;
     align-items: flex-start;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
   }
 `;
 
@@ -184,20 +189,26 @@ export const BookingPopup: React.FC<BookingPopupProps> = ({ onClose }) => {
 
   // Prevent body scroll when popup is open
   useEffect(() => {
-    const originalStyle = window.getComputedStyle(document.body).overflow;
-    document.body.style.overflow = 'hidden';
-    document.body.style.position = 'fixed';
-    document.body.style.width = '100%';
-    document.body.style.top = `-${window.scrollY}px`;
+    if (window.innerWidth <= 480) { // Only for mobile devices
+      const scrollY = window.scrollY;
+      const originalStyle = window.getComputedStyle(document.body).overflow;
+      
+      // Apply styles immediately to prevent any flash
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.height = '100%';
 
-    return () => {
-      const scrollY = document.body.style.top;
-      document.body.style.overflow = originalStyle;
-      document.body.style.position = '';
-      document.body.style.width = '';
-      document.body.style.top = '';
-      window.scrollTo(0, parseInt(scrollY || '0') * -1);
-    };
+      return () => {
+        document.body.style.overflow = originalStyle;
+        document.body.style.position = '';
+        document.body.style.width = '';
+        document.body.style.top = '';
+        document.body.style.height = '';
+        window.scrollTo(0, scrollY);
+      };
+    }
   }, []);
   const [isDateTimeValid, setIsDateTimeValid] = useState(false);
   const [isClientInfoValid, setIsClientInfoValid] = useState(false);
