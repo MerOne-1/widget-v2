@@ -4,8 +4,9 @@ import styled from 'styled-components';
 import { ServiceCategorySelect } from './ServiceCategorySelect';
 import { EmployeeSelect } from './EmployeeSelect';
 import { BookingForm } from './BookingForm';
-import { Service, sampleServices } from '../types/services';
-import { Employee, sampleEmployees } from '../types/employees';
+import { Service } from '../types/services';
+import { Employee } from '../types/employees';
+import { FirebaseBookingService } from '../services/firebase/bookingService';
 import { ClientInfoForm } from './ClientInfoForm';
 import { ConfirmationSection } from './ConfirmationSection';
 import { theme } from '../styles/theme';
@@ -236,17 +237,46 @@ export const BookingPopup: React.FC<BookingPopupProps> = ({ onClose }) => {
     setSelectedServices(services);
   };
 
-  const handleNextStep = () => {
+  const [categories, setCategories] = useState([]);
+  const bookingService = new FirebaseBookingService();
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const cats = await bookingService.getServiceCategories();
+        const catsWithServices = await Promise.all(
+          cats.map(async (cat) => {
+            const services = await bookingService.getServices(cat.id);
+            return {
+              ...cat,
+              services: services
+            };
+          })
+        );
+        setCategories(catsWithServices);
+      } catch (error) {
+        console.error('Error loading categories:', error);
+      }
+    };
+    loadCategories();
+  }, []);
+
+  const handleNextStep = async () => {
     if (currentStep === 'services' && selectedServices.length > 0) {
-      const availableEmployees = sampleEmployees.filter(employee =>
-        selectedServices.every(service => employee.services.includes(service.id))
-      );
-      
-      if (availableEmployees.length === 1) {
-        setSelectedEmployee(availableEmployees[0]);
-        setCurrentStep('datetime');
-      } else {
-        setCurrentStep('employee');
+      try {
+        const employees = await bookingService.getEmployees();
+        const availableEmployees = employees.filter(employee =>
+          selectedServices.every(service => employee.services.includes(service.id))
+        );
+        
+        if (availableEmployees.length === 1) {
+          setSelectedEmployee(availableEmployees[0]);
+          setCurrentStep('datetime');
+        } else {
+          setCurrentStep('employee');
+        }
+      } catch (error) {
+        console.error('Error loading employees:', error);
       }
     } else if (currentStep === 'employee' && selectedEmployee) {
       setCurrentStep('datetime');
@@ -342,7 +372,7 @@ export const BookingPopup: React.FC<BookingPopupProps> = ({ onClose }) => {
         <ContentScroll>
           {currentStep === 'services' && (
             <ServiceCategorySelect
-              categories={sampleServices}
+              categories={categories}
               onServiceSelect={handleServiceSelect}
               selectedServices={selectedServices}
             />
@@ -350,7 +380,7 @@ export const BookingPopup: React.FC<BookingPopupProps> = ({ onClose }) => {
 
           {currentStep === 'employee' && (
             <EmployeeSelect
-              employees={sampleEmployees}
+              employees={[]}
               selectedServices={selectedServices}
               selectedEmployee={selectedEmployee}
               onEmployeeSelect={setSelectedEmployee}
