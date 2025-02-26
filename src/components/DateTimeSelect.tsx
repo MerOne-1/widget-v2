@@ -142,7 +142,10 @@ export const DateTimeSelect: React.FC<DateTimeSelectProps> = ({
   const today = new Date();
   const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
   const daysInMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0).getDate();
-  const firstDayOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1).getDay();
+  // Get first day of month (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
+  let firstDayOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1).getDay();
+  // Convert to Monday-based (0 = Monday, 1 = Tuesday, ..., 6 = Sunday)
+  firstDayOfMonth = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1;
 
   const monthNames = [
     'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -191,7 +194,7 @@ export const DateTimeSelect: React.FC<DateTimeSelectProps> = ({
     onDateTimeSelect(selectedDate, time);
   };
 
-  const weekDays = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+  const weekDays = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
   const timeSlots = generateTimeSlots();
 
   return (
