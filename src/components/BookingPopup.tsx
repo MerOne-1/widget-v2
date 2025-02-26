@@ -243,16 +243,40 @@ export const BookingPopup: React.FC<BookingPopupProps> = ({ onClose }) => {
   useEffect(() => {
     const loadCategories = async () => {
       try {
+        // First get all categories
         const cats = await bookingService.getServiceCategories();
+        const activeCats = cats.filter(cat => cat.active);
+        
+        // Sort categories by order (ascending)
+        const sortedCats = [...activeCats].sort((a, b) => {
+          // Handle undefined orders by putting them at the end
+          if (a.order === undefined) return 1;
+          if (b.order === undefined) return -1;
+          return a.order - b.order;
+        });
+
+        // For each category, get and sort its services
         const catsWithServices = await Promise.all(
-          cats.map(async (cat) => {
+          sortedCats.map(async (cat) => {
             const services = await bookingService.getServices(cat.id);
+            const activeServices = services.filter(service => service.active);
+            
+            // Sort services by order (ascending)
+            const sortedServices = [...activeServices].sort((a, b) => {
+              // Handle undefined orders by putting them at the end
+              if (a.order === undefined) return 1;
+              if (b.order === undefined) return -1;
+              return a.order - b.order;
+            });
+
             return {
               ...cat,
-              services: services
+              services: sortedServices
             };
           })
         );
+
+        console.log('Categories with sorted services:', catsWithServices);
         setCategories(catsWithServices);
       } catch (error) {
         console.error('Error loading categories:', error);
