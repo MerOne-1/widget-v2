@@ -13,18 +13,46 @@ export interface ServiceCategory {
   description?: string;
 }
 
+export interface Shift {
+  start: string; // HH:mm
+  end: string; // HH:mm
+}
+
+export interface DaySchedule {
+  isWorkingDay: boolean;
+  shifts: Shift[];
+}
+
+export interface WeeklySchedule {
+  monday: DaySchedule;
+  tuesday: DaySchedule;
+  wednesday: DaySchedule;
+  thursday: DaySchedule;
+  friday: DaySchedule;
+  saturday: DaySchedule;
+  sunday: DaySchedule;
+}
+
+export interface ScheduleException {
+  date: string; // YYYY-MM-DD
+  isWorkingDay: boolean;
+  reason?: string;
+  shifts?: Shift[];
+}
+
+export interface EmployeeSchedule {
+  weeklySchedule: WeeklySchedule;
+  exceptions: ScheduleException[];
+}
+
 export interface Employee {
   id: string;
   name: string;
   role: string;
   avatar?: string;
   services: string[]; // Service IDs
-  schedule: {
-    [key: string]: { // day of week (0-6)
-      start: string; // HH:mm
-      end: string; // HH:mm
-    };
-  };
+  active: boolean;
+  schedule: EmployeeSchedule;
 }
 
 export interface Availability {

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { DateTimeSelect } from './DateTimeSelect';
+import { Employee } from '../services/api/types';
+import { Service } from '../services/api/types';
 
 
 
@@ -7,9 +9,13 @@ interface BookingFormProps {
   onValidityChange: (isValid: boolean) => void;
   onDateSelect: (date: string) => void;
   onTimeSelect: (time: string) => void;
+  selectedEmployee: Employee | null;
+  selectedServices: Service[];
 }
 
 export const BookingForm: React.FC<BookingFormProps> = ({
+  selectedEmployee,
+  selectedServices,
   onValidityChange,
   onDateSelect,
   onTimeSelect
@@ -30,5 +36,11 @@ export const BookingForm: React.FC<BookingFormProps> = ({
     }
   };
 
-  return <DateTimeSelect onDateTimeSelect={handleDateTimeSelect} />;
+  return (
+    <DateTimeSelect 
+      onDateTimeSelect={handleDateTimeSelect}
+      selectedEmployee={selectedEmployee}
+      selectedServices={selectedServices}
+    />
+  );
 };

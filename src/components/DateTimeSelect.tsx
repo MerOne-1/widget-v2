@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Employee, Service } from '../services/api/types';
+import { AvailabilityService } from '../services/availability/availabilityService';
 import styled from 'styled-components';
 import { theme } from '../styles/theme';
 
@@ -129,13 +131,28 @@ const TimeSlot = styled.button<{ $isSelected?: boolean }>`
 
 interface DateTimeSelectProps {
   onDateTimeSelect: (date: Date | null, time: string | null) => void;
+  selectedEmployee: Employee | null;
+  selectedServices: Service[];
 }
 
 export const DateTimeSelect: React.FC<DateTimeSelectProps> = ({
+  selectedEmployee,
+  selectedServices,
   onDateTimeSelect
 }) => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [availableDates, setAvailableDates] = useState<Date[]>([]);
+
+  useEffect(() => {
+    if (selectedEmployee) {
+      // Find the next available date
+      const nextDate = AvailabilityService.getNextAvailableDate(selectedEmployee, new Date());
+      if (nextDate) {
+        setSelectedDate(nextDate);
+      }
+    }
+  }, [selectedEmployee]);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   
   // Generate calendar data
@@ -170,13 +187,30 @@ export const DateTimeSelect: React.FC<DateTimeSelectProps> = ({
     setCurrentMonth(newMonth);
   };
   
-  // Generate time slots (9:00 AM to 5:00 PM, 15-minute intervals)
+  // Generate time slots based on employee availability
   const generateTimeSlots = () => {
+    if (!selectedDate || !selectedEmployee) return [];
+
+    const schedule = AvailabilityService.getScheduleForDate(selectedEmployee, selectedDate);
+    if (!schedule || !schedule.isWorking || !schedule.timeSlots.length) return [];
+
     const slots: string[] = [];
-    for (let hour = 9; hour < 17; hour++) {
-      for (let minute = 0; minute < 60; minute += 15) {
-        const time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+    for (const slot of schedule.timeSlots) {
+      const [startHour, startMinute] = slot.start.split(':').map(Number);
+      const [endHour, endMinute] = slot.end.split(':').map(Number);
+      
+      let currentHour = startHour;
+      let currentMinute = startMinute;
+      
+      while (currentHour < endHour || (currentHour === endHour && currentMinute < endMinute)) {
+        const time = `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`;
         slots.push(time);
+        
+        currentMinute += 15;
+        if (currentMinute >= 60) {
+          currentHour += 1;
+          currentMinute = 0;
+        }
       }
     }
     return slots;
@@ -228,15 +262,17 @@ export const DateTimeSelect: React.FC<DateTimeSelectProps> = ({
           const isToday = day === today.getDate() && currentMonth.getMonth() === today.getMonth() && currentMonth.getFullYear() === today.getFullYear();
           const isSelected = selectedDate?.getDate() === day && selectedDate?.getMonth() === currentMonth.getMonth() && selectedDate?.getFullYear() === currentMonth.getFullYear();
           const isPast = date < startOfToday;
+          const schedule = selectedEmployee ? AvailabilityService.getScheduleForDate(selectedEmployee, date) : null;
+          const isDisabled = isPast || !schedule?.isWorking;
 
           return (
             <Day
               key={day}
-              onClick={() => !isPast && handleDateSelect(day)}
+              onClick={() => !isDisabled && handleDateSelect(day)}
               $isToday={isToday}
               $isSelected={isSelected}
-              $isDisabled={isPast}
-              disabled={isPast}
+              $isDisabled={isDisabled}
+              disabled={isDisabled}
             >
               {day}
             </Day>

@@ -441,6 +441,8 @@ export const BookingPopup: React.FC<BookingPopupProps> = ({ onClose, initialCate
                 onValidityChange={setIsDateTimeValid}
                 onDateSelect={setSelectedDate}
                 onTimeSelect={setSelectedTime}
+                selectedEmployee={selectedEmployee}
+                selectedServices={selectedServices}
               />
             </>
           )}
