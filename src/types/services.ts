@@ -3,26 +3,24 @@ export interface Service {
   name: string;
   price: number;
   duration: number; // in minutes
-  category: string;
+  description: string;
+  categoryId: string;
+  active: boolean;
+  order: number;
+  createdAt?: any;
+  updatedAt?: any;
 }
 
 export interface ServiceCategory {
   id: string;
   name: string;
-  services: Service[];
+  description: string;
+  active: boolean;
+  order: number;
+  createdAt?: any;
+  updatedAt?: any;
+  services?: Service[];
 }
-
-// Sample data
-export const sampleServices: ServiceCategory[] = [
-  {
-    id: 'waxing',
-    name: 'Waxing',
-    services: [
-      {
-        id: 'half-leg-wax',
-        name: 'Half Leg Waxing',
-        price: 30,
-        duration: 30,
         category: 'Waxing'
       },
       {

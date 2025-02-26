@@ -238,6 +238,7 @@ export const BookingPopup: React.FC<BookingPopupProps> = ({ onClose }) => {
   };
 
   const [categories, setCategories] = useState([]);
+  const [employees, setEmployees] = useState([]);
   const bookingService = new FirebaseBookingService();
 
   useEffect(() => {
@@ -286,21 +287,34 @@ export const BookingPopup: React.FC<BookingPopupProps> = ({ onClose }) => {
   }, []);
 
   const handleNextStep = async () => {
-    if (currentStep === 'services' && selectedServices.length > 0) {
+    if (currentStep === 'services') {
+      if (selectedServices.length === 0) {
+        return; // Don't proceed if no services selected
+      }
       try {
-        const employees = await bookingService.getEmployees();
-        const availableEmployees = employees.filter(employee =>
-          selectedServices.every(service => employee.services.includes(service.id))
+        const fetchedEmployees = await bookingService.getEmployees();
+        console.log('Fetched employees:', fetchedEmployees);
+        const availableEmployees = fetchedEmployees.filter(employee =>
+          employee.active && selectedServices.every(service => employee.services.includes(service.id))
         );
+        console.log('Available employees:', availableEmployees);
+        
+        setEmployees(availableEmployees);
         
         if (availableEmployees.length === 1) {
           setSelectedEmployee(availableEmployees[0]);
           setCurrentStep('datetime');
-        } else {
+        } else if (availableEmployees.length > 1) {
           setCurrentStep('employee');
+        } else {
+          // If no employees are available, proceed to datetime selection
+          // The admin will need to assign an employee later
+          setCurrentStep('datetime');
         }
       } catch (error) {
         console.error('Error loading employees:', error);
+        // If there's an error fetching employees, proceed to datetime selection
+        setCurrentStep('datetime');
       }
     } else if (currentStep === 'employee' && selectedEmployee) {
       setCurrentStep('datetime');
@@ -318,15 +332,7 @@ export const BookingPopup: React.FC<BookingPopupProps> = ({ onClose }) => {
     if (currentStep === 'client-info') {
       setCurrentStep('datetime');
     } else if (currentStep === 'datetime') {
-      const availableEmployees = sampleEmployees.filter(employee =>
-        selectedServices.every(service => employee.services.includes(service.id))
-      );
-      
-      if (availableEmployees.length === 1) {
-        setCurrentStep('services');
-      } else {
-        setCurrentStep('employee');
-      }
+      setCurrentStep('employee');
     } else if (currentStep === 'employee') {
       setCurrentStep('services');
     }
@@ -404,7 +410,7 @@ export const BookingPopup: React.FC<BookingPopupProps> = ({ onClose }) => {
 
           {currentStep === 'employee' && (
             <EmployeeSelect
-              employees={[]}
+              employees={employees}
               selectedServices={selectedServices}
               selectedEmployee={selectedEmployee}
               onEmployeeSelect={setSelectedEmployee}
@@ -413,24 +419,40 @@ export const BookingPopup: React.FC<BookingPopupProps> = ({ onClose }) => {
 
           {currentStep === 'datetime' && (
             <>
-              <div style={{ marginBottom: '24px' }}>
-                <h3 style={{ 
-                  margin: '0 0 8px 0',
-                  fontSize: theme.typography.title.size,
-                  fontWeight: theme.typography.title.weight,
-                  color: theme.colors.text
+              {selectedEmployee ? (
+                <div style={{ marginBottom: '24px' }}>
+                  <h3 style={{ 
+                    margin: '0 0 8px 0',
+                    fontSize: theme.typography.title.size,
+                    fontWeight: theme.typography.title.weight,
+                    color: theme.colors.text
+                  }}>
+                    {selectedEmployee.name}
+                  </h3>
+                  <p style={{ 
+                    margin: 0,
+                    fontSize: theme.typography.text.size,
+                    color: theme.colors.text,
+                    opacity: 0.8
+                  }}>
+                    {selectedEmployee.role}
+                  </p>
+                </div>
+              ) : (
+                <div style={{ 
+                  marginBottom: '24px',
+                  padding: '12px',
+                  backgroundColor: '#fff3cd',
+                  border: '1px solid #ffeeba',
+                  borderRadius: '4px',
+                  color: '#856404'
                 }}>
-                  {selectedEmployee?.name}
-                </h3>
-                <p style={{ 
-                  margin: 0,
-                  fontSize: theme.typography.text.size,
-                  color: theme.colors.text,
-                  opacity: 0.8
-                }}>
-                  {selectedEmployee?.role}
-                </p>
-              </div>
+                  <p style={{ margin: 0 }}>
+                    No hay profesionales disponibles en este momento para los servicios seleccionados. 
+                    Se te asignará un profesional después de la reserva.
+                  </p>
+                </div>
+              )}
               <BookingForm
                 onValidityChange={setIsDateTimeValid}
                 onDateSelect={setSelectedDate}
