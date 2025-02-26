@@ -332,7 +332,12 @@ export const BookingPopup: React.FC<BookingPopupProps> = ({ onClose }) => {
     if (currentStep === 'client-info') {
       setCurrentStep('datetime');
     } else if (currentStep === 'datetime') {
-      setCurrentStep('employee');
+      // If there's only one employee or no employees, go back to services
+      if (employees.length <= 1) {
+        setCurrentStep('services');
+      } else {
+        setCurrentStep('employee');
+      }
     } else if (currentStep === 'employee') {
       setCurrentStep('services');
     }
