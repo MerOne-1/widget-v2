@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { BookingPopup } from '../components/BookingPopup';
 import { theme } from '../styles/theme';
+import { FirebaseBookingService } from '../services/firebase/bookingService';
+import { ServiceCategory } from '../types/services';
+import { Employee } from '../types/employees';
 
 const DevContainer = styled.div`
   padding: 2rem;
@@ -78,6 +81,45 @@ const ColorSwatch = styled.div<{ $color: string; $name: string }>`
 
 const DevPage = () => {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [categories, setCategories] = useState<ServiceCategory[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const bookingService = new FirebaseBookingService();
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        // Load categories
+        const cats = await bookingService.getServiceCategories();
+        const activeCats = cats.filter(cat => cat.active);
+
+        // Load services for each category
+        const catsWithServices = await Promise.all(
+          activeCats.map(async (cat) => {
+            const services = await bookingService.getServices(cat.id);
+            const activeServices = services.filter(service => service.active);
+            return {
+              ...cat,
+              services: activeServices
+            };
+          })
+        );
+
+        setCategories(catsWithServices);
+
+        // Load employees
+        const emps = await bookingService.getEmployees();
+        const activeEmps = emps.filter(emp => emp.active);
+        setEmployees(activeEmps);
+      } catch (error) {
+        console.error('Error loading initial data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
 
   return (
     <DevContainer>
@@ -103,12 +145,22 @@ const DevPage = () => {
             <p style={{ marginBottom: '1rem', color: '#666' }}>
               Click the button below to open the booking widget
             </p>
-            <BookButton onClick={() => setIsPopupOpen(true)}>
-              Book Now
+            <BookButton 
+              onClick={() => setIsPopupOpen(true)}
+              disabled={isLoading}
+              style={{ opacity: isLoading ? 0.7 : 1 }}
+            >
+              {isLoading ? 'Loading...' : 'Book Now'}
             </BookButton>
           </div>
         </Grid>
-        {isPopupOpen && <BookingPopup onClose={() => setIsPopupOpen(false)} />}
+        {isPopupOpen && (
+          <BookingPopup 
+            onClose={() => setIsPopupOpen(false)} 
+            initialCategories={categories}
+            initialEmployees={employees}
+          />
+        )}
       </Section>
 
       <Section>

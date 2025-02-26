@@ -169,6 +169,8 @@ const ContentScroll = styled.div.attrs({ id: 'content-scroll' })`
 
 interface BookingPopupProps {
   onClose: () => void;
+  initialCategories: ServiceCategory[];
+  initialEmployees: Employee[];
 }
 
 type BookingStep = 'services' | 'employee' | 'datetime' | 'client-info' | 'confirmation';
@@ -182,7 +184,7 @@ interface ClientInfo {
   comments?: string;
 }
 
-export const BookingPopup: React.FC<BookingPopupProps> = ({ onClose }) => {
+export const BookingPopup: React.FC<BookingPopupProps> = ({ onClose, initialCategories, initialEmployees }) => {
   const [selectedServices, setSelectedServices] = useState<Service[]>([]);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
 
@@ -237,83 +239,49 @@ export const BookingPopup: React.FC<BookingPopupProps> = ({ onClose }) => {
     setSelectedServices(services);
   };
 
-  const [categories, setCategories] = useState([]);
-  const [employees, setEmployees] = useState([]);
   const bookingService = new FirebaseBookingService();
 
-  useEffect(() => {
-    const loadCategories = async () => {
-      try {
-        // First get all categories
-        const cats = await bookingService.getServiceCategories();
-        const activeCats = cats.filter(cat => cat.active);
-        
-        // Sort categories by order (ascending)
-        const sortedCats = [...activeCats].sort((a, b) => {
-          // Handle undefined orders by putting them at the end
-          if (a.order === undefined) return 1;
-          if (b.order === undefined) return -1;
-          return a.order - b.order;
-        });
-
-        // For each category, get and sort its services
-        const catsWithServices = await Promise.all(
-          sortedCats.map(async (cat) => {
-            const services = await bookingService.getServices(cat.id);
-            const activeServices = services.filter(service => service.active);
-            
-            // Sort services by order (ascending)
-            const sortedServices = [...activeServices].sort((a, b) => {
-              // Handle undefined orders by putting them at the end
-              if (a.order === undefined) return 1;
-              if (b.order === undefined) return -1;
-              return a.order - b.order;
-            });
-
-            return {
-              ...cat,
-              services: sortedServices
-            };
+  // Sort categories and their services by order
+  const sortedCategories = [...initialCategories]
+    .sort((a, b) => {
+      if (a.order === undefined) return 1;
+      if (b.order === undefined) return -1;
+      return a.order - b.order;
+    })
+    .map(cat => ({
+      ...cat,
+      services: cat.services
+        ? [...cat.services].sort((a, b) => {
+            if (a.order === undefined) return 1;
+            if (b.order === undefined) return -1;
+            return a.order - b.order;
           })
-        );
+        : []
+    }));
 
-        console.log('Categories with sorted services:', catsWithServices);
-        setCategories(catsWithServices);
-      } catch (error) {
-        console.error('Error loading categories:', error);
-      }
-    };
-    loadCategories();
-  }, []);
+  const [categories] = useState(sortedCategories);
+  const [employees] = useState(initialEmployees);
 
   const handleNextStep = async () => {
     if (currentStep === 'services') {
       if (selectedServices.length === 0) {
         return; // Don't proceed if no services selected
       }
-      try {
-        const fetchedEmployees = await bookingService.getEmployees();
-        console.log('Fetched employees:', fetchedEmployees);
-        const availableEmployees = fetchedEmployees.filter(employee =>
-          employee.active && selectedServices.every(service => employee.services.includes(service.id))
-        );
-        console.log('Available employees:', availableEmployees);
-        
-        setEmployees(availableEmployees);
-        
-        if (availableEmployees.length === 1) {
-          setSelectedEmployee(availableEmployees[0]);
-          setCurrentStep('datetime');
-        } else if (availableEmployees.length > 1) {
-          setCurrentStep('employee');
-        } else {
-          // If no employees are available, proceed to datetime selection
-          // The admin will need to assign an employee later
-          setCurrentStep('datetime');
-        }
-      } catch (error) {
-        console.error('Error loading employees:', error);
-        // If there's an error fetching employees, proceed to datetime selection
+
+      // Filter employees based on selected services
+      const availableEmployees = employees.filter(employee =>
+        employee.active && selectedServices.every(service => employee.services.includes(service.id))
+      );
+      console.log('Available employees:', availableEmployees);
+      
+      if (availableEmployees.length === 1) {
+        setSelectedEmployee(availableEmployees[0]);
+        setCurrentStep('datetime');
+      } else if (availableEmployees.length > 1) {
+        setCurrentStep('employee');
+      } else {
+        // If no employees are available, proceed to datetime selection
+        // The admin will need to assign an employee later
         setCurrentStep('datetime');
       }
     } else if (currentStep === 'employee' && selectedEmployee) {
@@ -332,8 +300,13 @@ export const BookingPopup: React.FC<BookingPopupProps> = ({ onClose }) => {
     if (currentStep === 'client-info') {
       setCurrentStep('datetime');
     } else if (currentStep === 'datetime') {
-      // If there's only one employee or no employees, go back to services
-      if (employees.length <= 1) {
+      // Get available employees for the selected services
+      const availableEmployees = employees.filter(employee =>
+        employee.active && selectedServices.every(service => employee.services.includes(service.id))
+      );
+      
+      // If there's only one available employee or no employees, go back to services
+      if (availableEmployees.length <= 1) {
         setCurrentStep('services');
       } else {
         setCurrentStep('employee');
