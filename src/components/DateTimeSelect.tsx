@@ -195,17 +195,38 @@ export const DateTimeSelect: React.FC<DateTimeSelectProps> = ({
     if (!schedule || !schedule.isWorking || !schedule.timeSlots.length) return [];
 
     const slots: string[] = [];
+    const now = new Date();
+    const isToday = selectedDate.getDate() === now.getDate() && 
+                   selectedDate.getMonth() === now.getMonth() && 
+                   selectedDate.getFullYear() === now.getFullYear();
+
     for (const slot of schedule.timeSlots) {
       const [startHour, startMinute] = slot.start.split(':').map(Number);
       const [endHour, endMinute] = slot.end.split(':').map(Number);
       
+      // For today, only show future time slots
+      if (isToday) {
+        const currentHour = now.getHours();
+        const currentMinute = now.getMinutes();
+        
+        // If this slot is in the past, skip it
+        if (startHour < currentHour || 
+            (startHour === currentHour && startMinute <= currentMinute)) {
+          continue;
+        }
+      }
+
+      // Add the slot start time
+      slots.push(slot.start);
+
+      // Generate 15-minute intervals within the slot
       let currentHour = startHour;
-      let currentMinute = startMinute;
-      
+      let currentMinute = startMinute + 15;
+
       while (currentHour < endHour || (currentHour === endHour && currentMinute < endMinute)) {
         const time = `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`;
         slots.push(time);
-        
+
         currentMinute += 15;
         if (currentMinute >= 60) {
           currentHour += 1;
@@ -213,8 +234,15 @@ export const DateTimeSelect: React.FC<DateTimeSelectProps> = ({
         }
       }
     }
-    return slots;
+
+    return slots.sort();
   };
+
+  const [availableTimeSlots, setAvailableTimeSlots] = useState<string[]>([]);
+
+  useEffect(() => {
+    setAvailableTimeSlots(generateTimeSlots());
+  }, [selectedDate, selectedEmployee]);
 
   const handleDateSelect = (day: number) => {
     const newDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
@@ -229,7 +257,6 @@ export const DateTimeSelect: React.FC<DateTimeSelectProps> = ({
   };
 
   const weekDays = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
-  const timeSlots = generateTimeSlots();
 
   return (
     <Container>
@@ -280,9 +307,9 @@ export const DateTimeSelect: React.FC<DateTimeSelectProps> = ({
         })}
       </Calendar>
 
-      {selectedDate && (
+      {selectedDate && availableTimeSlots.length > 0 && (
         <TimeGrid>
-          {timeSlots.map(time => (
+          {availableTimeSlots.map(time => (
             <TimeSlot
               key={time}
               onClick={() => handleTimeSelect(time)}
@@ -292,6 +319,11 @@ export const DateTimeSelect: React.FC<DateTimeSelectProps> = ({
             </TimeSlot>
           ))}
         </TimeGrid>
+      )}
+      {selectedDate && availableTimeSlots.length === 0 && (
+        <div style={{ color: theme.colors.text, textAlign: 'center', padding: '16px' }}>
+          No hay horarios disponibles para esta fecha.
+        </div>
       )}
     </Container>
   );

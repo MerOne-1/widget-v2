@@ -81,7 +81,7 @@ export class AvailabilityService {
     const schedule = this.getScheduleForDate(employee, date);
     if (!schedule) return false;
 
-    return schedule.isWorkingDay && schedule.shifts.length > 0;
+    return schedule.isWorking && schedule.timeSlots.length > 0;
   }
 
   /**

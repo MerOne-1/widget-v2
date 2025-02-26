@@ -13,14 +13,14 @@ export interface ServiceCategory {
   description?: string;
 }
 
-export interface Shift {
+export interface TimeSlot {
   start: string; // HH:mm
   end: string; // HH:mm
 }
 
 export interface DaySchedule {
-  isWorkingDay: boolean;
-  shifts: Shift[];
+  isWorking: boolean;
+  timeSlots: TimeSlot[];
 }
 
 export interface WeeklySchedule {
@@ -34,15 +34,17 @@ export interface WeeklySchedule {
 }
 
 export interface ScheduleException {
-  date: string; // YYYY-MM-DD
-  isWorkingDay: boolean;
-  reason?: string;
-  shifts?: Shift[];
+  id: string;
+  startDate: string; // ISO date string
+  endDate: string; // ISO date string
+  type: 'holiday' | 'custom';
+  note?: string;
+  timeSlots: TimeSlot[];
 }
 
 export interface EmployeeSchedule {
   weeklySchedule: WeeklySchedule;
-  exceptions: ScheduleException[];
+  exceptions?: ScheduleException[];
 }
 
 export interface Employee {
