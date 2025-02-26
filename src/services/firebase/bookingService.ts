@@ -105,19 +105,60 @@ export class FirebaseBookingService {
     return slots;
   }
 
+  // Calculate end time based on start time and duration
+  private calculateEndTime(startTime: string, durationMinutes: number): string {
+    const [hours, minutes] = startTime.split(':').map(Number);
+    const totalMinutes = hours * 60 + minutes + durationMinutes;
+    const endHours = Math.floor(totalMinutes / 60);
+    const endMinutes = totalMinutes % 60;
+    return `${endHours.toString().padStart(2, '0')}:${endMinutes.toString().padStart(2, '0')}`;
+  }
+
   // Bookings
-  async createBooking(booking: Omit<Booking, 'id' | 'status' | 'createdAt' | 'updatedAt'>): Promise<Booking> {
-    const bookingData = {
-      ...booking,
-      status: 'pending',
+  async createBooking(bookingData: {
+    services: Service[];
+    employeeId: string;
+    employeeName: string;
+    clientInfo: ClientInfo;
+    date: string;
+    time: string;
+  }): Promise<Booking> {
+    // Calculate total duration and price
+    const totalDuration = bookingData.services.reduce((total, service) => total + service.duration, 0);
+    const totalPrice = bookingData.services.reduce((total, service) => total + service.price, 0);
+    
+    // Calculate the end time based on total duration
+    const endTime = this.calculateEndTime(bookingData.time, totalDuration);
+
+    // Map services to BookingService format
+    const bookingServices = bookingData.services.map(service => ({
+      id: service.id,
+      name: service.name,
+      duration: service.duration,
+      price: service.price
+    }));
+
+    const booking = {
+      services: bookingServices,
+      employeeId: bookingData.employeeId,
+      employeeName: bookingData.employeeName,
+      clientInfo: bookingData.clientInfo,
+      date: bookingData.date,
+      timeSlot: {
+        start: bookingData.time,
+        end: endTime
+      },
+      totalDuration,
+      totalPrice,
+      status: 'pending' as const,
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now()
     };
 
-    const docRef = await addDoc(collection(db, 'bookings'), bookingData);
+    const docRef = await addDoc(collection(db, 'bookings'), booking);
     return {
       id: docRef.id,
-      ...bookingData
+      ...booking
     } as Booking;
   }
 }

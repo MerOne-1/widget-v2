@@ -348,7 +348,7 @@ export const BookingPopup: React.FC<BookingPopupProps> = ({ onClose }) => {
     }
   };
 
-  const handleBooking = () => {
+  const handleBooking = async () => {
     if (selectedServices.length === 0) {
       return;
     }
@@ -368,22 +368,28 @@ export const BookingPopup: React.FC<BookingPopupProps> = ({ onClose }) => {
       }
     }
 
-    if (isClientInfoValid && clientInfo) {
-      // Generate a random booking number (in production this would come from the backend)
-      const randomBookingNumber = Math.random().toString(36).substring(2, 10).toUpperCase();
-      setBookingNumber(randomBookingNumber);
-      
-      // Here you would typically submit the booking to your backend
-      console.log('Booking submitted:', {
-        bookingNumber: randomBookingNumber,
-        services: selectedServices,
-        employee: selectedEmployee,
-        date: selectedDate,
-        time: selectedTime,
-        clientInfo: clientInfo,
-      });
-      
-      setCurrentStep('confirmation');
+    if (isClientInfoValid && clientInfo && selectedServices.length > 0) {
+      try {
+        // Create the booking with all selected information
+        const booking = await bookingService.createBooking({
+          services: selectedServices,
+          employeeId: selectedEmployee?.id || '',
+          employeeName: selectedEmployee?.name || 'No asignado',
+          clientInfo,
+          date: selectedDate,
+          time: selectedTime
+        });
+
+        // Set the booking number from the created booking
+        setBookingNumber(booking.id);
+        
+        console.log('Booking created:', booking);
+        
+        setCurrentStep('confirmation');
+      } catch (error) {
+        console.error('Error creating booking:', error);
+        // Here you might want to show an error message to the user
+      }
     }
   };
 
@@ -504,7 +510,12 @@ export const BookingPopup: React.FC<BookingPopupProps> = ({ onClose }) => {
             
             {currentStep === 'client-info' ? (
               <BookButton
-                onClick={handleBooking}
+                onClick={() => {
+                  handleBooking().catch(error => {
+                    console.error('Error in booking:', error);
+                    // Here you could show an error message to the user
+                  });
+                }}
                 style={{ flex: 1 }}
               >
                 Reservar Ahora
