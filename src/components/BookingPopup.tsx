@@ -7,6 +7,7 @@ import { BookingForm } from './BookingForm';
 import { Service } from '../types/services';
 import { Employee } from '../types/employees';
 import { FirebaseBookingService } from '../services/firebase/bookingService';
+import { AvailabilityCacheService } from '../services/availability/availabilityCache';
 import { ClientInfoForm } from './ClientInfoForm';
 import { ConfirmationSection } from './ConfirmationSection';
 import { theme } from '../styles/theme';
@@ -185,6 +186,21 @@ interface ClientInfo {
 }
 
 export const BookingPopup: React.FC<BookingPopupProps> = ({ onClose, initialCategories, initialEmployees }) => {
+  const [isLoadingAvailability, setIsLoadingAvailability] = useState(false);
+
+  // Preload availability data for all employees when the component mounts
+  useEffect(() => {
+    const preloadAllEmployeesAvailability = async () => {
+      const today = new Date();
+      const activeEmployees = initialEmployees.filter(emp => emp.active);
+      
+      for (const employee of activeEmployees) {
+        await AvailabilityCacheService.preloadAvailability(employee, today);
+      }
+    };
+
+    preloadAllEmployeesAvailability();
+  }, [initialEmployees]);
   const [selectedServices, setSelectedServices] = useState<Service[]>([]);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
 
@@ -234,6 +250,21 @@ export const BookingPopup: React.FC<BookingPopupProps> = ({ onClose, initialCate
       contentScroll.scrollTop = 0;
     }
   }, [currentStep]);
+
+  // Handle background loading of availability data
+  useEffect(() => {
+    if (!isLoadingAvailability || !selectedEmployee) return;
+
+    const loadAvailability = async () => {
+      try {
+        await AvailabilityCacheService.preloadAvailability(selectedEmployee, new Date());
+      } finally {
+        setIsLoadingAvailability(false);
+      }
+    };
+
+    loadAvailability();
+  }, [selectedEmployee, isLoadingAvailability]);
 
   const handleServiceSelect = (services: Service[]) => {
     setSelectedServices(services);
@@ -443,6 +474,7 @@ export const BookingPopup: React.FC<BookingPopupProps> = ({ onClose, initialCate
                 onTimeSelect={setSelectedTime}
                 selectedEmployee={selectedEmployee}
                 selectedServices={selectedServices}
+                isLoadingAvailability={isLoadingAvailability}
               />
             </>
           )}

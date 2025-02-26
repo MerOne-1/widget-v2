@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { BookingPopup } from '../components/BookingPopup';
 import { theme } from '../styles/theme';
 import { FirebaseBookingService } from '../services/firebase/bookingService';
+import { AvailabilityCacheService } from '../services/availability/availabilityCache';
 import { ServiceCategory } from '../types/services';
 import { Employee } from '../types/employees';
 
@@ -111,6 +112,16 @@ const DevPage = () => {
         const emps = await bookingService.getEmployees();
         const activeEmps = emps.filter(emp => emp.active);
         setEmployees(activeEmps);
+
+        // Preload availability data for all active employees
+        console.log('Preloading availability data for employees...');
+        const today = new Date();
+        await Promise.all(
+          activeEmps.map(employee =>
+            AvailabilityCacheService.preloadAvailability(employee, today)
+          )
+        );
+        console.log('Finished preloading availability data');
       } catch (error) {
         console.error('Error loading initial data:', error);
       } finally {

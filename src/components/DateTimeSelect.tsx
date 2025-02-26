@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Employee, Service } from '../services/api/types';
 import { AvailabilityService } from '../services/availability/availabilityService';
+import { AvailabilityCacheService } from '../services/availability/availabilityCache';
 import styled from 'styled-components';
 import { theme } from '../styles/theme';
 
@@ -8,6 +9,34 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   gap: 24px;
+  position: relative;
+`;
+
+const LoadingOverlay = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+`;
+
+const LoadingSpinner = styled.div`
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid ${theme.colors.primary};
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
 `;
 
 const CalendarHeader = styled.div`
@@ -133,16 +162,19 @@ interface DateTimeSelectProps {
   onDateTimeSelect: (date: Date | null, time: string | null) => void;
   selectedEmployee: Employee | null;
   selectedServices: Service[];
+  isLoading?: boolean;
 }
 
 export const DateTimeSelect: React.FC<DateTimeSelectProps> = ({
   selectedEmployee,
   selectedServices,
-  onDateTimeSelect
+  onDateTimeSelect,
+  isLoading = false
 }) => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [availableDates, setAvailableDates] = useState<Date[]>([]);
+  const [disabledDates, setDisabledDates] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (selectedEmployee) {
@@ -188,10 +220,10 @@ export const DateTimeSelect: React.FC<DateTimeSelectProps> = ({
   };
   
   // Generate time slots based on employee availability
-  const generateTimeSlots = () => {
+  const generateTimeSlots = async () => {
     if (!selectedDate || !selectedEmployee) return [];
 
-    const schedule = AvailabilityService.getScheduleForDate(selectedEmployee, selectedDate);
+    const schedule = await AvailabilityService.getScheduleForDate(selectedEmployee, selectedDate);
     if (!schedule || !schedule.isWorking || !schedule.timeSlots.length) return [];
 
     const slots: string[] = [];
@@ -241,8 +273,14 @@ export const DateTimeSelect: React.FC<DateTimeSelectProps> = ({
   const [availableTimeSlots, setAvailableTimeSlots] = useState<string[]>([]);
 
   useEffect(() => {
-    setAvailableTimeSlots(generateTimeSlots());
+    const updateTimeSlots = async () => {
+      const slots = await generateTimeSlots();
+      setAvailableTimeSlots(slots);
+    };
+    updateTimeSlots();
   }, [selectedDate, selectedEmployee]);
+
+
 
   const handleDateSelect = (day: number) => {
     const newDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
@@ -260,6 +298,11 @@ export const DateTimeSelect: React.FC<DateTimeSelectProps> = ({
 
   return (
     <Container>
+      {isLoading && (
+        <LoadingOverlay>
+          <LoadingSpinner />
+        </LoadingOverlay>
+      )}
       <CalendarHeader>
         <MonthNavigator>
           <NavigationButton 
@@ -289,8 +332,9 @@ export const DateTimeSelect: React.FC<DateTimeSelectProps> = ({
           const isToday = day === today.getDate() && currentMonth.getMonth() === today.getMonth() && currentMonth.getFullYear() === today.getFullYear();
           const isSelected = selectedDate?.getDate() === day && selectedDate?.getMonth() === currentMonth.getMonth() && selectedDate?.getFullYear() === currentMonth.getFullYear();
           const isPast = date < startOfToday;
-          const schedule = selectedEmployee ? AvailabilityService.getScheduleForDate(selectedEmployee, date) : null;
-          const isDisabled = isPast || !schedule?.isWorking;
+          const dateStr = date.toISOString().split('T')[0];
+          const isAvailable = selectedEmployee ? AvailabilityCacheService.isDateAvailable(selectedEmployee.id, date) : null;
+          const isDisabled = isPast || !selectedEmployee || isAvailable === false;
 
           return (
             <Day

@@ -1,4 +1,6 @@
-import { Employee, DaySchedule, ScheduleException, Shift } from '../api/types';
+import { Employee, DaySchedule, ScheduleException, Shift, Booking } from '../api/types';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '../firebase/config';
 
 interface TimeSlot {
   start: string;
@@ -41,7 +43,7 @@ export class AvailabilityService {
   /**
    * Get the day schedule for a specific date, considering exceptions
    */
-  static getScheduleForDate(employee: Employee, date: Date): DaySchedule | null {
+  static async getScheduleForDate(employee: Employee, date: Date): Promise<DaySchedule | null> {
     const fbSchedule = employee.schedule as unknown as FirebaseSchedule;
     
     // First check if there's an exception for this date
@@ -69,7 +71,42 @@ export class AvailabilityService {
       };
     }
 
-    return fbSchedule.weeklySchedule[dayOfWeek];
+    const schedule = fbSchedule.weeklySchedule[dayOfWeek];
+    if (!schedule.isWorking) {
+      return schedule;
+    }
+
+    // Check existing bookings for this date
+    const dateStr = this.formatDate(date);
+    const bookingsRef = collection(db, 'bookings');
+    const q = query(
+      bookingsRef,
+      where('employeeId', '==', employee.id),
+      where('date', '==', dateStr),
+      where('status', 'in', ['pending', 'confirmed'])
+    );
+
+    const bookingsSnapshot = await getDocs(q);
+    const bookings = bookingsSnapshot.docs.map(doc => doc.data() as Booking);
+
+    // Filter out time slots that overlap with existing bookings
+    const availableTimeSlots = schedule.timeSlots.filter(slot => {
+      const slotStart = this.timeToMinutes(slot.start);
+      const slotEnd = this.timeToMinutes(slot.end);
+
+      return !bookings.some(booking => {
+        const bookingStart = this.timeToMinutes(booking.timeSlot.start);
+        const bookingEnd = bookingStart + booking.totalDuration;
+
+        // Check if the slots overlap
+        return !(slotEnd <= bookingStart || slotStart >= bookingEnd);
+      });
+    });
+
+    return {
+      isWorking: schedule.isWorking,
+      timeSlots: availableTimeSlots
+    };
   }
 
   /**
@@ -106,6 +143,11 @@ export class AvailabilityService {
    */
   private static formatDate(date: Date): string {
     return date.toISOString().split('T')[0];
+  }
+
+  private static timeToMinutes(time: string): number {
+    const [hours, minutes] = time.split(':').map(Number);
+    return hours * 60 + minutes;
   }
 
   /**

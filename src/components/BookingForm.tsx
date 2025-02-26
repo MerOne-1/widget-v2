@@ -11,6 +11,7 @@ interface BookingFormProps {
   onTimeSelect: (time: string) => void;
   selectedEmployee: Employee | null;
   selectedServices: Service[];
+  isLoadingAvailability?: boolean;
 }
 
 export const BookingForm: React.FC<BookingFormProps> = ({
@@ -18,7 +19,8 @@ export const BookingForm: React.FC<BookingFormProps> = ({
   selectedServices,
   onValidityChange,
   onDateSelect,
-  onTimeSelect
+  onTimeSelect,
+  isLoadingAvailability = false
 }) => {
   const handleDateTimeSelect = (date: Date | null, time: string | null) => {
     const isValid = date !== null && time !== null;
@@ -41,6 +43,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
       onDateTimeSelect={handleDateTimeSelect}
       selectedEmployee={selectedEmployee}
       selectedServices={selectedServices}
+      isLoading={isLoadingAvailability}
     />
   );
 };
