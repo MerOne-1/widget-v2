@@ -1,4 +1,4 @@
-var A=Object.defineProperty,q=Object.defineProperties;var V=Object.getOwnPropertyDescriptors;var R=Object.getOwnPropertySymbols;var Y=Object.prototype.hasOwnProperty,G=Object.prototype.propertyIsEnumerable;var _=(r,i,t)=>i in r?A(r,i,{enumerable:!0,configurable:!0,writable:!0,value:t}):r[i]=t,z=(r,i)=>{for(var t in i||(i={}))Y.call(i,t)&&_(r,t,i[t]);if(R)for(var t of R(i))G.call(i,t)&&_(r,t,i[t]);return r},B=(r,i)=>q(r,V(i));import{r as f,d as n,R as H}from"./vendor.CFoNIRJ2.js";var D={exports:{}},k={};/**
+var A=Object.defineProperty,q=Object.defineProperties;var V=Object.getOwnPropertyDescriptors;var R=Object.getOwnPropertySymbols;var Y=Object.prototype.hasOwnProperty,G=Object.prototype.propertyIsEnumerable;var _=(r,i,t)=>i in r?A(r,i,{enumerable:!0,configurable:!0,writable:!0,value:t}):r[i]=t,z=(r,i)=>{for(var t in i||(i={}))Y.call(i,t)&&_(r,t,i[t]);if(R)for(var t of R(i))G.call(i,t)&&_(r,t,i[t]);return r},B=(r,i)=>q(r,V(i));import{r as f,d as n,R as H}from"./vendor.DC4dHUn3.js";var D={exports:{}},k={};/**
  * @license React
  * react-jsx-runtime.production.min.js
  *
@@ -58,19 +58,21 @@ var A=Object.defineProperty,q=Object.defineProperties;var V=Object.getOwnPropert
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: white;
+  transition: all 0.2s ease;
   ${r=>r.$isSelected?`
     border: 2px solid ${o.colors.containerBorder};
     border-radius: ${o.borderRadius.default};
     margin: 8px;
+    background-color: ${o.colors.border}40;
   `:`
     border: none;
     border-bottom: 1px solid ${o.colors.containerBorder};
     margin: 0;
+    background-color: white;
   `}
   
   &:hover {
-    background-color: ${r=>r.$isSelected?"white":"#f8f8f8"};
+    background-color: ${r=>r.$isSelected?`${o.colors.border}40`:"#f8f8f8"};
   }
 `,re=n.div`
   flex: 1;
@@ -110,7 +112,7 @@ var A=Object.defineProperty,q=Object.defineProperties;var V=Object.getOwnPropert
   justify-content: space-between;
   color: ${o.colors.text};
   margin-top: 4px;
-`,Se=({categories:r,onServiceSelect:i,selectedServices:t})=>{const[d,a]=f.useState(null),c=s=>{const l=Math.floor(s/60),p=s%60;return l===0?`${p}min`:`${l}h${p>0?` ${p}min`:""}`},x=s=>`${s.toFixed(2)}€`,b=s=>{a(d===s?null:s)},y=s=>{const p=t.some(m=>m.id===s.id)?t.filter(m=>m.id!==s.id):[...t,s];i(p)},$=t.reduce((s,l)=>s+l.duration,0),h=t.reduce((s,l)=>s+l.price,0);return e.jsxs(Z,{children:[e.jsx(ae,{children:r.map(s=>e.jsxs("div",{children:[e.jsx(ee,{$isExpanded:d===s.id,onClick:()=>b(s.id),children:s.name}),e.jsx(oe,{$isExpanded:d===s.id,children:s.services.map(l=>e.jsxs(te,{$isSelected:t.some(p=>p.id===l.id),onClick:()=>y(l),children:[e.jsxs(re,{children:[e.jsx(ie,{children:l.name}),e.jsx(ne,{children:c(l.duration)})]}),e.jsx(se,{children:x(l.price)})]},l.id))})]},s.id))}),t.length>0&&e.jsxs(le,{children:[e.jsx(de,{children:"Servicios Seleccionados"}),t.map(s=>e.jsxs(P,{children:[e.jsx("span",{children:s.name}),e.jsx("span",{children:c(s.duration)})]},s.id)),e.jsxs(P,{style:{marginTop:"12px",fontWeight:"bold"},children:[e.jsx("span",{children:"Total"}),e.jsxs("span",{children:[c($)," - ",x(h)]})]})]})]})},ce=n.div`
+`,Se=({categories:r,onServiceSelect:i,selectedServices:t})=>{const[d,a]=f.useState(null),c=s=>{const l=Math.floor(s/60),p=s%60;return l===0?`${p}min`:`${l}h${p>0?` ${p}min`:""}`},x=s=>`${s.toFixed(2)}€`,b=s=>{a(d===s?null:s)},y=s=>{const p=t.some(h=>h.id===s.id)?t.filter(h=>h.id!==s.id):[...t,s];i(p)},$=t.reduce((s,l)=>s+l.duration,0),m=t.reduce((s,l)=>s+l.price,0);return e.jsxs(Z,{children:[e.jsx(ae,{children:r.map(s=>e.jsxs("div",{children:[e.jsx(ee,{$isExpanded:d===s.id,onClick:()=>b(s.id),children:s.name}),e.jsx(oe,{$isExpanded:d===s.id,children:s.services.map(l=>e.jsxs(te,{$isSelected:t.some(p=>p.id===l.id),onClick:()=>y(l),children:[e.jsxs(re,{children:[e.jsx(ie,{children:l.name}),e.jsx(ne,{children:c(l.duration)})]}),e.jsx(se,{children:x(l.price)})]},l.id))})]},s.id))}),t.length>0&&e.jsxs(le,{children:[e.jsx(de,{children:"Servicios Seleccionados"}),t.map(s=>e.jsxs(P,{children:[e.jsx("span",{children:s.name}),e.jsx("span",{children:c(s.duration)})]},s.id)),e.jsxs(P,{style:{marginTop:"12px",fontWeight:"bold"},children:[e.jsx("span",{children:"Total"}),e.jsxs("span",{children:[c($)," - ",x(m)]})]})]})]})},ce=n.div`
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -129,12 +131,12 @@ var A=Object.defineProperty,q=Object.defineProperties;var V=Object.getOwnPropert
   font-size: ${o.typography.title.size};
   font-weight: ${o.typography.title.weight};
   color: ${o.colors.text};
-`,he=n.p`
+`,me=n.p`
   margin: 4px 0 0;
   font-size: ${o.typography.text.size};
   color: ${o.colors.text};
   opacity: 0.8;
-`,Ce=({employees:r,selectedServices:i,selectedEmployee:t,onEmployeeSelect:d})=>{const a=r.filter(c=>i.every(x=>c.services.includes(x.id)));return a.length===0?e.jsx("div",{children:"No hay profesionales disponibles para los servicios seleccionados."}):a.length===1?(t||d(a[0]),null):e.jsx(ce,{children:a.map(c=>e.jsxs(pe,{$isSelected:(t==null?void 0:t.id)===c.id,onClick:()=>d(c),children:[e.jsx(xe,{children:c.name}),e.jsx(he,{children:c.role})]},c.id))})},me=n.div`
+`,Ce=({employees:r,selectedServices:i,selectedEmployee:t,onEmployeeSelect:d})=>{const a=r.filter(c=>i.every(x=>c.services.includes(x.id)));return a.length===0?e.jsx("div",{children:"No hay profesionales disponibles para los servicios seleccionados."}):a.length===1?(t||d(a[0]),null):e.jsx(ce,{children:a.map(c=>e.jsxs(pe,{$isSelected:(t==null?void 0:t.id)===c.id,onClick:()=>d(c),children:[e.jsx(xe,{children:c.name}),e.jsx(me,{children:c.role})]},c.id))})},he=n.div`
   display: flex;
   flex-direction: column;
   gap: 32px;
@@ -236,7 +238,7 @@ var A=Object.defineProperty,q=Object.defineProperties;var V=Object.getOwnPropert
   margin-bottom: 24px;
   padding-bottom: 16px;
   border-bottom: 1px solid ${o.colors.border};
-`;const ke=({onFormValidityChange:r,onValidateRef:i})=>{const[t,d]=f.useState({firstName:"",lastName:"",email:"",phone:"",address:"",comments:""}),[a,c]=f.useState({}),[x,b]=f.useState(!1),y=l=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(l),$=l=>/^(?:\+34|0034)?[6789]\d{8}$/.test(l.replace(/\s/g,"")),h=l=>p=>{const m=p.target.value,S=B(z({},t),{[l]:m});if(d(S),a[l]){const C=z({},a);delete C[l],c(C)}s(!1)},s=H.useCallback(l=>{const p={},m=t.firstName.trim()!=="",S=t.lastName.trim()!=="",C=t.email.trim()!==""&&y(t.email),X=t.phone.trim()!==""&&$(t.phone),I=t.address.trim()!=="";m||(p.firstName="Campo requerido"),S||(p.lastName="Campo requerido"),t.email.trim()?y(t.email)||(p.email="Email no válido"):p.email="Campo requerido",t.phone.trim()?$(t.phone)||(p.phone="Teléfono no válido"):p.phone="Campo requerido",I||(p.address="Campo requerido"),l&&(c(p),b(!0)),r(m&&S&&C&&X&&I,t)},[t,y,$,r]);return f.useEffect(()=>{i(s)},[i,s]),f.useEffect(()=>{s(!1)},[s]),e.jsxs(me,{children:[e.jsxs(T,{children:[e.jsxs(g,{children:[e.jsx(u,{children:"Nombre"}),e.jsx(j,{type:"text",value:t.firstName,onChange:h("firstName"),placeholder:"Introduce tu nombre"}),a.firstName&&e.jsx(w,{children:a.firstName})]}),e.jsxs(g,{children:[e.jsx(u,{children:"Apellidos"}),e.jsx(j,{type:"text",value:t.lastName,onChange:h("lastName"),placeholder:"Introduce tus apellidos"}),a.lastName&&e.jsx(w,{children:a.lastName})]})]}),e.jsxs(T,{children:[e.jsxs(g,{children:[e.jsx(u,{children:"Email"}),e.jsx(j,{type:"email",value:t.email,onChange:h("email"),placeholder:"Introduce tu email"}),a.email&&e.jsx(w,{children:a.email})]}),e.jsxs(g,{children:[e.jsx(u,{children:"Teléfono"}),e.jsx(j,{type:"tel",value:t.phone,onChange:h("phone"),placeholder:"+34 XXX XXX XXX"}),a.phone&&e.jsx(w,{children:a.phone})]})]}),e.jsxs(g,{children:[e.jsx(u,{children:"Dirección"}),e.jsx(j,{type:"text",value:t.address,onChange:h("address"),placeholder:"Introduce tu dirección"}),a.address&&e.jsx(w,{children:a.address})]}),e.jsxs(g,{children:[e.jsx(u,{children:"Comentarios (Opcional)"}),e.jsx(fe,{value:t.comments,onChange:h("comments"),placeholder:"¿Alguna nota o petición especial?"})]})]})},ue=n.div`
+`;const ke=({onFormValidityChange:r,onValidateRef:i})=>{const[t,d]=f.useState({firstName:"",lastName:"",email:"",phone:"",address:"",comments:""}),[a,c]=f.useState({}),[x,b]=f.useState(!1),y=l=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(l),$=l=>/^(?:\+34|0034)?[6789]\d{8}$/.test(l.replace(/\s/g,"")),m=l=>p=>{const h=p.target.value,S=B(z({},t),{[l]:h});if(d(S),a[l]){const C=z({},a);delete C[l],c(C)}s(!1)},s=H.useCallback(l=>{const p={},h=t.firstName.trim()!=="",S=t.lastName.trim()!=="",C=t.email.trim()!==""&&y(t.email),X=t.phone.trim()!==""&&$(t.phone),I=t.address.trim()!=="";h||(p.firstName="Campo requerido"),S||(p.lastName="Campo requerido"),t.email.trim()?y(t.email)||(p.email="Email no válido"):p.email="Campo requerido",t.phone.trim()?$(t.phone)||(p.phone="Teléfono no válido"):p.phone="Campo requerido",I||(p.address="Campo requerido"),l&&(c(p),b(!0)),r(h&&S&&C&&X&&I,t)},[t,y,$,r]);return f.useEffect(()=>{i(s)},[i,s]),f.useEffect(()=>{s(!1)},[s]),e.jsxs(he,{children:[e.jsxs(T,{children:[e.jsxs(g,{children:[e.jsx(u,{children:"Nombre"}),e.jsx(j,{type:"text",value:t.firstName,onChange:m("firstName"),placeholder:"Introduce tu nombre"}),a.firstName&&e.jsx(w,{children:a.firstName})]}),e.jsxs(g,{children:[e.jsx(u,{children:"Apellidos"}),e.jsx(j,{type:"text",value:t.lastName,onChange:m("lastName"),placeholder:"Introduce tus apellidos"}),a.lastName&&e.jsx(w,{children:a.lastName})]})]}),e.jsxs(T,{children:[e.jsxs(g,{children:[e.jsx(u,{children:"Email"}),e.jsx(j,{type:"email",value:t.email,onChange:m("email"),placeholder:"Introduce tu email"}),a.email&&e.jsx(w,{children:a.email})]}),e.jsxs(g,{children:[e.jsx(u,{children:"Teléfono"}),e.jsx(j,{type:"tel",value:t.phone,onChange:m("phone"),placeholder:"+34 XXX XXX XXX"}),a.phone&&e.jsx(w,{children:a.phone})]})]}),e.jsxs(g,{children:[e.jsx(u,{children:"Dirección"}),e.jsx(j,{type:"text",value:t.address,onChange:m("address"),placeholder:"Introduce tu dirección"}),a.address&&e.jsx(w,{children:a.address})]}),e.jsxs(g,{children:[e.jsx(u,{children:"Comentarios (Opcional)"}),e.jsx(fe,{value:t.comments,onChange:m("comments"),placeholder:"¿Alguna nota o petición especial?"})]})]})},ue=n.div`
   padding: 32px;
   text-align: center;
   font-family: ${o.typography.fontFamily};
