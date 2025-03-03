@@ -76,9 +76,26 @@ export class AvailabilityService {
 
     // Get bookings for this date from the employee data
     const dateStr = this.formatDate(date);
-    const bookings = Object.values(employee.bookings?.[dateStr] || {}).filter(
-      booking => ['pending', 'confirmed'].includes(booking.status)
-    );
+    console.log('Checking bookings for date:', dateStr);
+    console.log('Employee data:', employee);
+    console.log('Employee schedule:', employee.schedule);
+    
+    // Get bookings from the employee's schedule
+    const fbSchedule = employee.schedule as any;
+    const bookings = fbSchedule?.bookings?.[dateStr] || [];
+    
+    console.log('Found bookings:', bookings);
+    
+    const activeBookings = bookings
+      .filter((booking: any) => ['pending', 'confirmed'].includes(booking.status))
+      .map((booking: any) => ({
+        ...booking,
+        start: booking.start || booking.timeSlot?.start,
+        end: booking.end || booking.timeSlot?.end || 
+              this.minutesToTime(this.timeToMinutes(booking.start || booking.timeSlot?.start) + (booking.duration || 60))
+      }));
+    
+    console.log('Active bookings:', activeBookings);
 
     // Split time slots based on bookings
     let availableTimeSlots: TimeSlot[] = [];
@@ -87,9 +104,9 @@ export class AvailabilityService {
       let currentSlots: TimeSlot[] = [slot];
 
       // Process each booking that might affect this slot
-      bookings.forEach(booking => {
-        const bookingStart = this.timeToMinutes(booking.timeSlot);
-        const bookingEnd = bookingStart + (booking.duration || 60); // Default to 60 minutes if duration not specified
+      activeBookings.forEach(booking => {
+        const bookingStart = this.timeToMinutes(booking.start);
+        const bookingEnd = this.timeToMinutes(booking.end);
 
         // Create new array of slots by splitting existing slots at booking boundaries
         const newSlots: TimeSlot[] = [];
