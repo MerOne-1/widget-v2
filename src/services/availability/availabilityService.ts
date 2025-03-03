@@ -1,6 +1,4 @@
 import { Employee, DaySchedule, ScheduleException, Shift, Booking } from '../api/types';
-import { collection, query, where, getDocs } from 'firebase/firestore';
-import { db } from '../firebase/config';
 
 interface TimeSlot {
   start: string;
@@ -76,18 +74,11 @@ export class AvailabilityService {
       return schedule;
     }
 
-    // Check existing bookings for this date
+    // Get bookings for this date from the employee data
     const dateStr = this.formatDate(date);
-    const bookingsRef = collection(db, 'bookings');
-    const q = query(
-      bookingsRef,
-      where('employeeId', '==', employee.id),
-      where('date', '==', dateStr),
-      where('status', 'in', ['pending', 'confirmed'])
+    const bookings = Object.values(employee.bookings?.[dateStr] || {}).filter(
+      booking => ['pending', 'confirmed'].includes(booking.status)
     );
-
-    const bookingsSnapshot = await getDocs(q);
-    const bookings = bookingsSnapshot.docs.map(doc => doc.data() as Booking);
 
     // Filter out time slots that overlap with existing bookings
     const availableTimeSlots = schedule.timeSlots.filter(slot => {

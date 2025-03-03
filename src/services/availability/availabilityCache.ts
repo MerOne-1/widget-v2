@@ -35,19 +35,27 @@ export class AvailabilityCacheService {
       this.cache[employee.id] = {};
     }
 
-    // Check each day until we reach the end date
-    while (currentDate <= endDate) {
-      const dateStr = currentDate.toISOString().split('T')[0];
-      
-      // Skip if we already have this date in cache
-      if (this.cache[employee.id][dateStr] === undefined) {
-        const schedule = await AvailabilityService.getScheduleForDate(employee, new Date(currentDate));
-        this.cache[employee.id][dateStr] = schedule?.isWorking && (schedule?.timeSlots.length ?? 0) > 0;
-      }
+    // Pre-calculate all schedules at once
+    const schedules = await Promise.all(
+      Array.from({ length: months * 31 }, (_, i) => {
+        const date = new Date(currentDate);
+        date.setDate(date.getDate() + i);
+        if (date <= endDate) {
+          return AvailabilityService.getScheduleForDate(employee, date);
+        }
+        return null;
+      })
+    );
 
-      // Move to next day
-      currentDate.setDate(currentDate.getDate() + 1);
-    }
+    // Update cache with all schedules
+    schedules.forEach((schedule, i) => {
+      if (schedule) {
+        const date = new Date(currentDate);
+        date.setDate(date.getDate() + i);
+        const dateStr = date.toISOString().split('T')[0];
+        this.cache[employee.id][dateStr] = schedule.isWorking && schedule.timeSlots.length > 0;
+      }
+    });
   }
 
   static isDateAvailable(employeeId: string, date: Date): boolean | null {

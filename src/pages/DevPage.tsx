@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { BookingPopup } from '../components/BookingPopup';
 import { theme } from '../styles/theme';
-import { FirebaseBookingService } from '../services/firebase/bookingService';
+import { WidgetDataService } from '../services/widgetDataService';
 import { AvailabilityCacheService } from '../services/availability/availabilityCache';
 import { ServiceCategory } from '../types/services';
 import { Employee } from '../types/employees';
@@ -85,43 +85,33 @@ const DevPage = () => {
   const [categories, setCategories] = useState<ServiceCategory[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const bookingService = new FirebaseBookingService();
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Load categories
-        const cats = await bookingService.getServiceCategories();
-        const activeCats = cats.filter(cat => cat.active);
+        console.time('Total Load Time');
+        
+        console.time('Widget Data Load');
+        // Load categories with services and employees from the widget data
+        const [cats, emps] = await Promise.all([
+          WidgetDataService.getServiceCategories(),
+          WidgetDataService.getEmployees()
+        ]);
+        console.timeEnd('Widget Data Load');
 
-        // Load services for each category
-        const catsWithServices = await Promise.all(
-          activeCats.map(async (cat) => {
-            const services = await bookingService.getServices(cat.id);
-            const activeServices = services.filter(service => service.active);
-            return {
-              ...cat,
-              services: activeServices
-            };
-          })
-        );
-
-        setCategories(catsWithServices);
-
-        // Load employees
-        const emps = await bookingService.getEmployees();
-        const activeEmps = emps.filter(emp => emp.active);
-        setEmployees(activeEmps);
+        setCategories(cats);
+        setEmployees(emps);
 
         // Preload availability data for all active employees
-        console.log('Preloading availability data for employees...');
+        console.time('Availability Cache');
         const today = new Date();
         await Promise.all(
-          activeEmps.map(employee =>
+          emps.map(employee =>
             AvailabilityCacheService.preloadAvailability(employee, today)
           )
         );
-        console.log('Finished preloading availability data');
+        console.timeEnd('Availability Cache');
+        console.timeEnd('Total Load Time');
       } catch (error) {
         console.error('Error loading initial data:', error);
       } finally {
@@ -129,7 +119,26 @@ const DevPage = () => {
       }
     };
 
+    // Load initial data
     loadData();
+
+    // Subscribe to real-time updates
+    const unsubscribe = WidgetDataService.subscribeToUpdates(async (data) => {
+      if (data) {
+        const [cats, emps] = await Promise.all([
+          WidgetDataService.getServiceCategories(),
+          WidgetDataService.getEmployees()
+        ]);
+        setCategories(cats);
+        setEmployees(emps);
+      }
+    });
+
+    // Cleanup subscription on unmount
+    return () => {
+      unsubscribe();
+      WidgetDataService.cleanup();
+    };
   }, []);
 
   return (
