@@ -219,7 +219,7 @@ export const DateTimeSelect: React.FC<DateTimeSelectProps> = ({
     setCurrentMonth(newMonth);
   };
   
-  // Generate time slots based on employee availability
+  // Get available time slots from the AvailabilityService
   const generateTimeSlots = async () => {
     if (!selectedDate || !selectedEmployee || !selectedServices.length) return [];
 
@@ -234,51 +234,9 @@ export const DateTimeSelect: React.FC<DateTimeSelectProps> = ({
     
     if (!schedule || !schedule.isWorking || !schedule.timeSlots.length) return [];
 
-    const slots: string[] = [];
-    const now = new Date();
-    const isToday = selectedDate.getDate() === now.getDate() && 
-                   selectedDate.getMonth() === now.getMonth() && 
-                   selectedDate.getFullYear() === now.getFullYear();
-
-    for (const slot of schedule.timeSlots) {
-      const [startHour, startMinute] = slot.start.split(':').map(Number);
-      const [endHour, endMinute] = slot.end.split(':').map(Number);
-      
-      // Convert to minutes for easier calculation
-      const slotStartMinutes = startHour * 60 + startMinute;
-      const slotEndMinutes = endHour * 60 + endMinute;
-      
-      // For today, only show future time slots
-      if (isToday) {
-        const currentHour = now.getHours();
-        const currentMinute = now.getMinutes();
-        const currentTimeMinutes = currentHour * 60 + currentMinute;
-        
-        // If this slot is in the past, skip it
-        if (slotStartMinutes <= currentTimeMinutes) {
-          continue;
-        }
-      }
-
-      // Only show slots that have enough time for the service
-      if (slotEndMinutes - slotStartMinutes >= totalDuration) {
-        // Add the slot start time
-        slots.push(slot.start);
-
-        // Generate 15-minute intervals within the slot, ensuring there's enough time for the service
-        let currentMinutes = slotStartMinutes + 15;
-
-        while (currentMinutes + totalDuration <= slotEndMinutes) {
-          const currentHour = Math.floor(currentMinutes / 60);
-          const currentMinute = currentMinutes % 60;
-          const time = `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`;
-          slots.push(time);
-          currentMinutes += 15;
-        }
-      }
-    }
-
-    return slots.sort();
+    // The AvailabilityService now returns pre-calculated 15-minute intervals
+    // that are guaranteed to be available and not overlapping with any bookings
+    return schedule.timeSlots;
   };
 
   const [availableTimeSlots, setAvailableTimeSlots] = useState<string[]>([]);
