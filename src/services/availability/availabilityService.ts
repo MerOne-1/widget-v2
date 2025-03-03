@@ -81,8 +81,8 @@ export class AvailabilityService {
     console.log('Employee schedule:', employee.schedule);
     
     // Get bookings from the employee's schedule
-    const fbSchedule = employee.schedule as any;
-    const bookings = fbSchedule?.bookings?.[dateStr] || [];
+    const employeeSchedule = employee.schedule as any;
+    const bookings = employeeSchedule?.bookings?.[dateStr] || [];
     
     console.log('Found bookings:', bookings);
     
