@@ -80,19 +80,64 @@ export class AvailabilityService {
       booking => ['pending', 'confirmed'].includes(booking.status)
     );
 
-    // Filter out time slots that overlap with existing bookings
-    const availableTimeSlots = schedule.timeSlots.filter(slot => {
-      const slotStart = this.timeToMinutes(slot.start);
-      const slotEnd = this.timeToMinutes(slot.end);
+    // Split time slots based on bookings
+    let availableTimeSlots: TimeSlot[] = [];
 
-      return !bookings.some(booking => {
-        const bookingStart = this.timeToMinutes(booking.timeSlot.start);
-        const bookingEnd = bookingStart + booking.totalDuration;
+    schedule.timeSlots.forEach(slot => {
+      let currentSlots: TimeSlot[] = [slot];
 
-        // Check if the slots overlap
-        return !(slotEnd <= bookingStart || slotStart >= bookingEnd);
+      // Process each booking that might affect this slot
+      bookings.forEach(booking => {
+        const bookingStart = this.timeToMinutes(booking.timeSlot);
+        const bookingEnd = bookingStart + (booking.duration || 60); // Default to 60 minutes if duration not specified
+
+        // Create new array of slots by splitting existing slots at booking boundaries
+        const newSlots: TimeSlot[] = [];
+
+        currentSlots.forEach(currentSlot => {
+          const slotStart = this.timeToMinutes(currentSlot.start);
+          const slotEnd = this.timeToMinutes(currentSlot.end);
+
+          // If slot is completely before or after booking, keep it as is
+          if (slotEnd <= bookingStart || slotStart >= bookingEnd) {
+            newSlots.push(currentSlot);
+            return;
+          }
+
+          // If booking starts after slot start, create a slot before booking
+          if (bookingStart > slotStart) {
+            newSlots.push({
+              start: currentSlot.start,
+              end: this.minutesToTime(bookingStart)
+            });
+          }
+
+          // If booking ends before slot end, create a slot after booking
+          if (bookingEnd < slotEnd) {
+            newSlots.push({
+              start: this.minutesToTime(bookingEnd),
+              end: currentSlot.end
+            });
+          }
+        });
+
+        currentSlots = newSlots;
       });
+
+      // Add all remaining slots to final result
+      availableTimeSlots.push(...currentSlots);
     });
+
+    // Filter out slots that are too short (less than 15 minutes)
+    availableTimeSlots = availableTimeSlots.filter(slot => {
+      const duration = this.timeToMinutes(slot.end) - this.timeToMinutes(slot.start);
+      return duration >= 15;
+    });
+
+    // Sort slots by start time
+    availableTimeSlots.sort((a, b) => 
+      this.timeToMinutes(a.start) - this.timeToMinutes(b.start)
+    );
 
     return {
       isWorking: schedule.isWorking,
@@ -140,6 +185,11 @@ export class AvailabilityService {
     const [hours, minutes] = time.split(':').map(Number);
     return hours * 60 + minutes;
   }
+
+  private static minutesToTime(minutes: number): string {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
 
   /**
    * Get the next available date for an employee starting from a given date
