@@ -265,15 +265,15 @@ export const DateTimeSelect: React.FC<DateTimeSelectProps> = ({
         // Add the slot start time
         slots.push(slot.start);
 
-        // Generate 30-minute intervals within the slot, ensuring there's enough time for the service
-        let currentMinutes = slotStartMinutes + 30;
+        // Generate 15-minute intervals within the slot, ensuring there's enough time for the service
+        let currentMinutes = slotStartMinutes + 15;
 
         while (currentMinutes + totalDuration <= slotEndMinutes) {
           const currentHour = Math.floor(currentMinutes / 60);
           const currentMinute = currentMinutes % 60;
           const time = `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`;
           slots.push(time);
-          currentMinutes += 30;
+          currentMinutes += 15;
         }
       }
     }
