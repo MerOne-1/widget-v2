@@ -53,7 +53,7 @@ export function useEmployees(serviceId?: string) {
   return { employees, loading, error };
 }
 
-export function useAvailability(params: { employeeId: string; serviceId: string; date: string; }) {
+export function useAvailability(params: { employeeId: string; serviceId: string; date: string; serviceDuration?: number; }) {
   const [slots, setSlots] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);

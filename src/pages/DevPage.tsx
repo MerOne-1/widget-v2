@@ -89,7 +89,12 @@ const DevPage = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
+        setIsLoading(true);
         console.time('Total Load Time');
+        
+        // First get the raw widget data to debug
+        const rawData = await WidgetDataService.getWidgetData();
+        console.log('Raw widget data:', rawData);
         
         console.time('Widget Data Load');
         // Load categories with services and employees from the widget data
@@ -98,6 +103,9 @@ const DevPage = () => {
           WidgetDataService.getEmployees()
         ]);
         console.timeEnd('Widget Data Load');
+
+        console.log('Loaded categories:', cats);
+        console.log('Loaded employees:', emps);
 
         setCategories(cats);
         setEmployees(emps);

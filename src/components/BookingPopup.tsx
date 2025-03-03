@@ -272,6 +272,12 @@ export const BookingPopup: React.FC<BookingPopupProps> = ({ onClose, initialCate
 
   const bookingService = new FirebaseBookingService();
 
+  // Debug logging for initial data
+  useEffect(() => {
+    console.log('Initial categories:', initialCategories);
+    console.log('Initial employees:', initialEmployees);
+  }, [initialCategories, initialEmployees]);
+
   // Sort categories and their services by order
   const sortedCategories = [...initialCategories]
     .sort((a, b) => {
@@ -290,8 +296,21 @@ export const BookingPopup: React.FC<BookingPopupProps> = ({ onClose, initialCate
         : []
     }));
 
-  const [categories] = useState(sortedCategories);
-  const [employees] = useState(initialEmployees);
+  console.log('Sorted categories:', sortedCategories);
+
+  const [categories, setCategories] = useState(sortedCategories);
+  const [employees, setEmployees] = useState(initialEmployees);
+
+  // Update state when props change
+  useEffect(() => {
+    console.log('Categories updated:', initialCategories);
+    setCategories(sortedCategories);
+  }, [initialCategories]);
+
+  useEffect(() => {
+    console.log('Employees updated:', initialEmployees);
+    setEmployees(initialEmployees);
+  }, [initialEmployees]);
 
   const handleNextStep = async () => {
     if (currentStep === 'services') {
@@ -416,11 +435,23 @@ export const BookingPopup: React.FC<BookingPopupProps> = ({ onClose, initialCate
         
         <ContentScroll>
           {currentStep === 'services' && (
-            <ServiceCategorySelect
-              categories={categories}
-              onServiceSelect={handleServiceSelect}
-              selectedServices={selectedServices}
-            />
+            <>
+              {categories.length > 0 ? (
+                <ServiceCategorySelect
+                  categories={categories}
+                  onServiceSelect={handleServiceSelect}
+                  selectedServices={selectedServices}
+                />
+              ) : (
+                <div style={{
+                  padding: '20px',
+                  textAlign: 'center',
+                  color: theme.colors.text
+                }}>
+                  Loading services...
+                </div>
+              )}
+            </>
           )}
 
           {currentStep === 'employee' && (

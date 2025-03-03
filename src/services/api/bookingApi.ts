@@ -56,6 +56,7 @@ class BookingApi {
     employeeId: string;
     serviceId: string;
     date: string;
+    serviceDuration?: number;
   }): Promise<string[]> {
     if (this.useMock) {
       // Mock available slots
@@ -67,21 +68,36 @@ class BookingApi {
       
       if (!schedule) return Promise.resolve([]);
 
-      // Generate slots every 30 minutes
+      // Get the service to check its duration
+      const service = services.find(s => s.id === params.serviceId);
+      const serviceDuration = params.serviceDuration || (service?.duration || 30);
+      
+      // Generate slots based on service duration
       const slots: string[] = [];
       const [startHour, startMinute] = schedule.start.split(':').map(Number);
       const [endHour, endMinute] = schedule.end.split(':').map(Number);
       
-      let currentHour = startHour;
-      let currentMinute = startMinute;
+      // Convert to minutes for easier calculation
+      const startMinutes = startHour * 60 + startMinute;
+      const endMinutes = endHour * 60 + endMinute;
+      let currentMinutes = startMinutes;
 
-      while (currentHour < endHour || (currentHour === endHour && currentMinute < endMinute)) {
-        slots.push(`${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`);
-        currentMinute += 30;
-        if (currentMinute >= 60) {
-          currentHour += 1;
-          currentMinute = 0;
+      // Only show slots if there's enough time for the service
+      while (currentMinutes + serviceDuration <= endMinutes) {
+        // For today, skip past slots
+        if (params.date === new Date().toISOString().split('T')[0]) {
+          const now = new Date();
+          const currentTime = now.getHours() * 60 + now.getMinutes();
+          if (currentMinutes <= currentTime) {
+            currentMinutes += 30;
+            continue;
+          }
         }
+
+        const currentHour = Math.floor(currentMinutes / 60);
+        const currentMinute = currentMinutes % 60;
+        slots.push(`${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`);
+        currentMinutes += 30;
       }
 
       return Promise.resolve(slots);

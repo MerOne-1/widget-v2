@@ -221,9 +221,17 @@ export const DateTimeSelect: React.FC<DateTimeSelectProps> = ({
   
   // Generate time slots based on employee availability
   const generateTimeSlots = async () => {
-    if (!selectedDate || !selectedEmployee) return [];
+    if (!selectedDate || !selectedEmployee || !selectedServices.length) return [];
 
-    const schedule = await AvailabilityService.getScheduleForDate(selectedEmployee, selectedDate);
+    // Calculate total duration needed
+    const totalDuration = selectedServices.reduce((total, service) => total + service.duration, 0);
+    
+    const schedule = await AvailabilityService.getScheduleForDate(
+      selectedEmployee,
+      selectedDate,
+      totalDuration
+    );
+    
     if (!schedule || !schedule.isWorking || !schedule.timeSlots.length) return [];
 
     const slots: string[] = [];
@@ -236,33 +244,36 @@ export const DateTimeSelect: React.FC<DateTimeSelectProps> = ({
       const [startHour, startMinute] = slot.start.split(':').map(Number);
       const [endHour, endMinute] = slot.end.split(':').map(Number);
       
+      // Convert to minutes for easier calculation
+      const slotStartMinutes = startHour * 60 + startMinute;
+      const slotEndMinutes = endHour * 60 + endMinute;
+      
       // For today, only show future time slots
       if (isToday) {
         const currentHour = now.getHours();
         const currentMinute = now.getMinutes();
+        const currentTimeMinutes = currentHour * 60 + currentMinute;
         
         // If this slot is in the past, skip it
-        if (startHour < currentHour || 
-            (startHour === currentHour && startMinute <= currentMinute)) {
+        if (slotStartMinutes <= currentTimeMinutes) {
           continue;
         }
       }
 
-      // Add the slot start time
-      slots.push(slot.start);
+      // Only show slots that have enough time for the service
+      if (slotEndMinutes - slotStartMinutes >= totalDuration) {
+        // Add the slot start time
+        slots.push(slot.start);
 
-      // Generate 15-minute intervals within the slot
-      let currentHour = startHour;
-      let currentMinute = startMinute + 15;
+        // Generate 30-minute intervals within the slot, ensuring there's enough time for the service
+        let currentMinutes = slotStartMinutes + 30;
 
-      while (currentHour < endHour || (currentHour === endHour && currentMinute < endMinute)) {
-        const time = `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`;
-        slots.push(time);
-
-        currentMinute += 15;
-        if (currentMinute >= 60) {
-          currentHour += 1;
-          currentMinute = 0;
+        while (currentMinutes + totalDuration <= slotEndMinutes) {
+          const currentHour = Math.floor(currentMinutes / 60);
+          const currentMinute = currentMinutes % 60;
+          const time = `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`;
+          slots.push(time);
+          currentMinutes += 30;
         }
       }
     }

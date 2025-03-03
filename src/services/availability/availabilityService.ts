@@ -41,8 +41,19 @@ export class AvailabilityService {
   /**
    * Get the day schedule for a specific date, considering exceptions
    */
-  static async getScheduleForDate(employee: Employee, date: Date): Promise<DaySchedule | null> {
+  static async getScheduleForDate(employee: Employee, date: Date, requiredDuration?: number): Promise<DaySchedule | null> {
+    console.log('Getting schedule for employee:', {
+      employeeId: employee.id,
+      employeeName: employee.name,
+      date: date.toISOString(),
+      rawSchedule: employee.schedule
+    });
+    
     const fbSchedule = employee.schedule as unknown as FirebaseSchedule;
+    console.log('Parsed Firebase schedule:', {
+      weeklySchedule: fbSchedule.weeklySchedule,
+      exceptions: fbSchedule.exceptions
+    });
     
     // First check if there's an exception for this date
     const exception = this.findException(employee, date);
@@ -62,17 +73,25 @@ export class AvailabilityService {
 
     // If no exception, get the regular weekly schedule
     const dayOfWeek = DAYS_OF_WEEK[date.getDay()];
-    if (!fbSchedule.weeklySchedule || !fbSchedule.weeklySchedule[dayOfWeek]) {
+    console.log('Checking availability for:', {
+      dayOfWeek,
+      dayNumber: date.getDay(),
+      hasWeeklySchedule: !!fbSchedule.weeklySchedule,
+      availableDays: fbSchedule.weeklySchedule ? Object.keys(fbSchedule.weeklySchedule) : [],
+      daySchedule: fbSchedule.weeklySchedule?.[dayOfWeek]
+    });
+    
+    // Get the schedule for this day
+    const daySchedule = fbSchedule.weeklySchedule?.[dayOfWeek];
+    if (!daySchedule || !daySchedule.isWorking || !daySchedule.timeSlots?.length) {
+      console.log('No working schedule found for day:', { dayOfWeek, daySchedule });
       return {
         isWorking: false,
         timeSlots: []
       };
     }
-
-    const schedule = fbSchedule.weeklySchedule[dayOfWeek];
-    if (!schedule.isWorking) {
-      return schedule;
-    }
+    
+    console.log('Found working schedule for day:', { dayOfWeek, daySchedule, timeSlots: daySchedule.timeSlots });
 
     // Get bookings for this date from the employee data
     const dateStr = this.formatDate(date);
@@ -82,68 +101,94 @@ export class AvailabilityService {
     
     // Get bookings from the employee's schedule
     const employeeSchedule = employee.schedule as any;
-    const bookings = employeeSchedule?.bookings?.[dateStr] || [];
+    const dateBookings = employeeSchedule?.bookings?.[dateStr] || {};
     
-    console.log('Found bookings:', bookings);
+    console.log('Date:', dateStr);
+    console.log('Schedule:', employeeSchedule);
+    console.log('Found bookings:', dateBookings);
     
-    const activeBookings = bookings
+    // Process bookings for this date
+    const activeBookings = Object.values(dateBookings)
       .filter((booking: any) => ['pending', 'confirmed'].includes(booking.status))
       .map((booking: any) => ({
-        ...booking,
-        start: booking.start || booking.timeSlot?.start,
-        end: booking.end || booking.timeSlot?.end || 
-              this.minutesToTime(this.timeToMinutes(booking.start || booking.timeSlot?.start) + (booking.duration || 60))
+        start: booking.timeSlot.start,
+        end: booking.timeSlot.end,
+        duration: booking.duration || 0,
+        status: booking.status
       }));
+      
+    // We only care about the time slots for availability, not what service was booked
     
     console.log('Active bookings:', activeBookings);
 
-    // Split time slots based on bookings
+    console.log('Processing schedule for date:', date);
+    console.log('Active bookings:', activeBookings);
+    
+    // For each time slot in the schedule, check if it's completely free
     let availableTimeSlots: TimeSlot[] = [];
 
-    schedule.timeSlots.forEach(slot => {
-      let currentSlots: TimeSlot[] = [slot];
+    // For today, we need to consider current time
+    const now = new Date();
+    const isToday = date.getDate() === now.getDate() && 
+                   date.getMonth() === now.getMonth() && 
+                   date.getFullYear() === now.getFullYear();
+    const currentMinutes = isToday ? now.getHours() * 60 + now.getMinutes() : 0;
 
-      // Process each booking that might affect this slot
-      activeBookings.forEach(booking => {
+    // Process each time slot
+    daySchedule.timeSlots.forEach(slot => {
+      const slotStart = this.timeToMinutes(slot.start);
+      const slotEnd = this.timeToMinutes(slot.end);
+
+      // Skip slots that have already passed today
+      if (isToday && slotStart <= currentMinutes) {
+        console.log('Skipping past slot:', `${slot.start} - ${slot.end}`);
+        return;
+      }
+
+      // Skip slots that are too short for the required duration
+      if (requiredDuration && (slotEnd - slotStart) < requiredDuration) {
+        console.log('Skipping slot too short:', {
+          slot: `${slot.start} - ${slot.end}`,
+          duration: slotEnd - slotStart,
+          required: requiredDuration
+        });
+        return;
+      }
+
+      console.log('Checking slot:', {
+        slot: `${slot.start} - ${slot.end}`,
+        slotStartMinutes: slotStart,
+        slotEndMinutes: slotEnd
+      });
+
+      // Check if this slot overlaps with any booking
+      const overlappingBookings = activeBookings.filter(booking => {
         const bookingStart = this.timeToMinutes(booking.start);
         const bookingEnd = this.timeToMinutes(booking.end);
 
-        // Create new array of slots by splitting existing slots at booking boundaries
-        const newSlots: TimeSlot[] = [];
+        // A booking overlaps if it starts before the slot ends AND ends after the slot starts
+        const hasOverlap = bookingStart < slotEnd && bookingEnd > slotStart;
 
-        currentSlots.forEach(currentSlot => {
-          const slotStart = this.timeToMinutes(currentSlot.start);
-          const slotEnd = this.timeToMinutes(currentSlot.end);
+        if (hasOverlap) {
+          console.log('Found overlapping booking:', {
+            booking: `${booking.start} - ${booking.end}`,
+            bookingStartMinutes: bookingStart,
+            bookingEndMinutes: bookingEnd
+          });
+        }
 
-          // If slot is completely before or after booking, keep it as is
-          if (slotEnd <= bookingStart || slotStart >= bookingEnd) {
-            newSlots.push(currentSlot);
-            return;
-          }
-
-          // If booking starts after slot start, create a slot before booking
-          if (bookingStart > slotStart) {
-            newSlots.push({
-              start: currentSlot.start,
-              end: this.minutesToTime(bookingStart)
-            });
-          }
-
-          // If booking ends before slot end, create a slot after booking
-          if (bookingEnd < slotEnd) {
-            newSlots.push({
-              start: this.minutesToTime(bookingEnd),
-              end: currentSlot.end
-            });
-          }
-        });
-
-        currentSlots = newSlots;
+        return hasOverlap;
       });
 
-      // Add all remaining slots to final result
-      availableTimeSlots.push(...currentSlots);
+      if (overlappingBookings.length === 0) {
+        console.log('Slot is available:', `${slot.start} - ${slot.end}`);
+        availableTimeSlots.push(slot);
+      } else {
+        console.log('Slot is not available due to overlapping bookings:', overlappingBookings);
+      }
     });
+
+    console.log('Available time slots:', availableTimeSlots);
 
     // Filter out slots that are too short (less than 15 minutes)
     availableTimeSlots = availableTimeSlots.filter(slot => {
@@ -157,7 +202,7 @@ export class AvailabilityService {
     );
 
     return {
-      isWorking: schedule.isWorking,
+      isWorking: daySchedule.isWorking,
       timeSlots: availableTimeSlots
     };
   }
