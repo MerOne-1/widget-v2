@@ -27,6 +27,109 @@ export class WidgetDataService {
       console.log('Found data at path:', this.widgetDataRef.path);
       console.log('Raw Firestore data:', data);
       
+      // SPECIAL DEBUG: Look for March 27 bookings and Paola
+      console.log('SPECIAL DEBUG: Professionals with bookings:', Object.keys(data.professionals || {}));
+      
+      // Look for any professional named Paola
+      const paolaData = Object.values(data.professionals || {}).find(p => p.name === 'Paola');
+      if (paolaData) {
+        console.log('FOUND PAOLA:', paolaData.id, paolaData.name);
+        console.log('PAOLA FULL DATA:', paolaData);
+        
+        // Check if bookings property exists
+        if (paolaData.bookings) {
+          console.log('PAOLA BOOKING DATES:', Object.keys(paolaData.bookings));
+          
+          // Try different date formats for March 27
+          const possibleDateFormats = [
+            '2025-03-27',
+            '2025-3-27',
+            '27-03-2025',
+            '27-3-2025',
+            '03-27-2025',
+            '3-27-2025',
+            '2025/03/27',
+            '2025/3/27',
+            '27/03/2025',
+            '27/3/2025',
+            '03/27/2025',
+            '3/27/2025'
+          ];
+          
+          let foundBooking = false;
+          
+          for (const dateFormat of possibleDateFormats) {
+            const bookings = paolaData.bookings[dateFormat];
+            if (bookings) {
+              console.log(`FOUND BOOKINGS FOR DATE FORMAT ${dateFormat}:`, bookings);
+              foundBooking = true;
+              
+              // Get detailed information about each booking
+              Object.entries(bookings).forEach(([bookingId, booking]) => {
+                console.log(`Booking ${bookingId}:`, booking);
+              });
+            }
+          }
+          
+          // If no booking found with the specific formats, search all dates for any morning bookings
+          if (!foundBooking) {
+            console.log('SEARCHING ALL DATES FOR MORNING BOOKINGS');
+            Object.entries(paolaData.bookings).forEach(([date, bookings]) => {
+              Object.entries(bookings).forEach(([bookingId, booking]) => {
+                // Check if this is a morning booking (before noon)
+                let startTime = '';
+                if (typeof booking.timeSlot === 'string') {
+                  startTime = booking.timeSlot.split('-')[0].trim();
+                } else if (booking.timeSlot && booking.timeSlot.start) {
+                  startTime = booking.timeSlot.start;
+                }
+                
+                if (startTime && startTime.startsWith('9:') || startTime.startsWith('09:') || startTime.startsWith('10:')) {
+                  console.log(`FOUND MORNING BOOKING ON ${date}:`, {
+                    bookingId,
+                    timeSlot: booking.timeSlot,
+                    status: booking.status,
+                    date
+                  });
+                }
+              });
+            });
+          }
+        } else {
+          console.log('PAOLA HAS NO BOOKINGS PROPERTY');
+          // Check if bookings might be under a different property
+          console.log('ALL PROPERTIES OF PAOLA:', Object.keys(paolaData));
+        }
+      } else {
+        // Look for any professional with March 27 bookings or morning bookings
+        console.log('PAOLA NOT FOUND, SEARCHING ALL PROFESSIONALS');
+        Object.values(data.professionals || {}).forEach(professional => {
+          console.log(`Checking professional: ${professional.name}`);
+          if (professional.bookings) {
+            Object.entries(professional.bookings).forEach(([date, bookings]) => {
+              Object.entries(bookings).forEach(([bookingId, booking]) => {
+                // Check if this is a morning booking (before noon)
+                let startTime = '';
+                if (typeof booking.timeSlot === 'string') {
+                  startTime = booking.timeSlot.split('-')[0].trim();
+                } else if (booking.timeSlot && booking.timeSlot.start) {
+                  startTime = booking.timeSlot.start;
+                }
+                
+                if (startTime && (startTime.startsWith('9:') || startTime.startsWith('09:') || startTime.startsWith('10:'))) {
+                  console.log(`FOUND MORNING BOOKING FOR ${professional.name} ON ${date}:`, {
+                    bookingId,
+                    timeSlot: booking.timeSlot,
+                    status: booking.status,
+                    date
+                  });
+                }
+              });
+            });
+          }
+        });
+      }
+      
       if (!data.serviceCategories) {
         console.error('No serviceCategories found in widget data');
         console.log('Available fields:', Object.keys(data));
@@ -138,12 +241,38 @@ export class WidgetDataService {
         // Process each date's bookings
         Object.entries(professional.bookings || {}).forEach(([date, dateBookings]) => {
           if (!dateBookings) return;
+          
+          console.log(`Processing bookings for ${professional.name} on ${date}:`, dateBookings);
 
           // Convert object of bookings to array and filter out invalid ones
           bookings[date] = Object.values(dateBookings)
             .filter(booking => {
+              console.log('Processing booking:', booking);
+              
+              // Check if the timeSlot is a string or an object
+              let timeSlotObj;
+              if (typeof booking.timeSlot === 'string') {
+                console.log('Found string timeSlot:', booking.timeSlot);
+                const timeSlotParts = booking.timeSlot.split('-');
+                if (timeSlotParts.length !== 2) {
+                  console.warn('Skipping booking with invalid string timeSlot format:', booking);
+                  return false;
+                }
+                
+                timeSlotObj = {
+                  start: timeSlotParts[0].trim(),
+                  end: timeSlotParts[1].trim()
+                };
+                
+                // Update the booking with parsed timeSlot for consistency
+                booking.timeSlot = timeSlotObj;
+                console.log('Converted string timeSlot to object:', timeSlotObj);
+              } else {
+                timeSlotObj = booking.timeSlot;
+              }
+              
               // Must have valid timeSlot
-              if (!booking.timeSlot || !booking.timeSlot.start || !booking.timeSlot.end) {
+              if (!timeSlotObj || !timeSlotObj.start || !timeSlotObj.end) {
                 console.warn('Skipping booking with invalid timeSlot:', booking);
                 return false;
               }
@@ -156,25 +285,30 @@ export class WidgetDataService {
 
               // For legacy bookings without duration, calculate it from timeSlot
               if (!booking.duration || booking.duration <= 0) {
-                const [startHour, startMinute] = booking.timeSlot.start.split(':').map(Number);
-                const [endHour, endMinute] = booking.timeSlot.end.split(':').map(Number);
+                const [startHour, startMinute] = timeSlotObj.start.split(':').map(Number);
+                const [endHour, endMinute] = timeSlotObj.end.split(':').map(Number);
                 const startMinutes = startHour * 60 + startMinute;
                 const endMinutes = endHour * 60 + endMinute;
                 booking.duration = endMinutes - startMinutes;
                 console.log('Calculated duration for legacy booking:', {
-                  timeSlot: booking.timeSlot,
+                  timeSlot: timeSlotObj,
                   calculatedDuration: booking.duration
                 });
               }
 
               return true;
             })
-            .map(booking => ({
-              start: booking.timeSlot.start,
-              end: booking.timeSlot.end,
-              duration: booking.duration,
-              status: booking.status
-            }));
+            .map(booking => {
+              const result = {
+                start: booking.timeSlot.start,
+                end: booking.timeSlot.end,
+                duration: booking.duration,
+                status: booking.status,
+                id: booking.id || `booking-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+              };
+              console.log('Transformed booking:', result);
+              return result;
+            });
         });
 
         console.log('Processing professional:', professional);
@@ -191,7 +325,12 @@ export class WidgetDataService {
         console.log('Professional schedule:', professional.schedule);
         console.log('Transformed schedule:', transformedSchedule);
         
-        console.log('Transformed schedule:', transformedSchedule);
+        // Detailed logging of the transformed employee with bookings
+        console.log('Transformed employee with bookings:', {
+          employeeName: professional.name,
+          bookingDates: Object.keys(transformedSchedule.bookings || {}),
+          sampleBookings: Object.entries(transformedSchedule.bookings || {}).slice(0, 2)
+        });
         
         return {
           id: professional.id,

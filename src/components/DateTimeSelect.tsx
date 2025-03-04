@@ -221,19 +221,60 @@ export const DateTimeSelect: React.FC<DateTimeSelectProps> = ({
   
   // Get available time slots from the AvailabilityService
   const generateTimeSlots = async () => {
-    if (!selectedDate || !selectedEmployee || !selectedServices.length) return [];
+    if (!selectedDate || !selectedEmployee || !selectedServices.length) {
+      console.log('Missing required data for generateTimeSlots:', { 
+        hasDate: !!selectedDate, 
+        hasEmployee: !!selectedEmployee,
+        servicesCount: selectedServices.length 
+      });
+      return [];
+    }
+
+    console.log(`Generating time slots for ${selectedEmployee.name} on ${selectedDate.toISOString().split('T')[0]}`);
+    console.log('Employee data:', {
+      id: selectedEmployee.id,
+      name: selectedEmployee.name,
+      hasSchedule: !!selectedEmployee.schedule,
+      scheduleType: typeof selectedEmployee.schedule,
+      hasBookings: selectedEmployee.schedule && 'bookings' in selectedEmployee.schedule
+    });
+    
+    if (selectedEmployee.schedule && 'bookings' in selectedEmployee.schedule) {
+      const bookings = selectedEmployee.schedule.bookings;
+      const dateStr = selectedDate.toISOString().split('T')[0];
+      console.log(`Bookings for date ${dateStr}:`, {
+        hasBookingsForDate: bookings && dateStr in bookings,
+        bookingsForDate: bookings && dateStr in bookings ? bookings[dateStr] : 'none',
+        allBookingDates: bookings ? Object.keys(bookings) : []
+      });
+    } else {
+      console.warn('Employee has no bookings property in schedule');
+    }
 
     // Calculate total duration needed
     const totalDuration = selectedServices.reduce((total, service) => total + service.duration, 0);
+    console.log(`Total service duration: ${totalDuration} minutes`);
     
+    console.time('getScheduleForDate');
     const schedule = await AvailabilityService.getScheduleForDate(
       selectedEmployee,
       selectedDate,
       totalDuration
     );
+    console.timeEnd('getScheduleForDate');
     
-    if (!schedule || !schedule.isWorking || !schedule.timeSlots.length) return [];
+    console.log('Retrieved schedule:', schedule);
+    
+    if (!schedule || !schedule.isWorking || !schedule.timeSlots.length) {
+      console.log('No available time slots found', { 
+        hasSchedule: !!schedule, 
+        isWorking: schedule?.isWorking, 
+        timeSlotsCount: schedule?.timeSlots?.length || 0 
+      });
+      return [];
+    }
 
+    console.log(`Found ${schedule.timeSlots.length} available time slots:`, schedule.timeSlots);
     // The AvailabilityService now returns pre-calculated 15-minute intervals
     // that are guaranteed to be available and not overlapping with any bookings
     return schedule.timeSlots;

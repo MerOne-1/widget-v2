@@ -101,28 +101,132 @@ export class AvailabilityService {
     
     // Get bookings from the employee's schedule
     const employeeSchedule = employee.schedule as any;
-    const dateBookings = employeeSchedule?.bookings?.[dateStr] || {};
+    
+    // IMPORTANT: Handle Spanish date format
+    const spanishDayNames = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+    const spanishMonthNames = [
+      'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+      'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
+    ];
+    
+    const day = date.getDate();
+    const month = date.getMonth();
+    const year = date.getFullYear();
+    const dayName = spanishDayNames[date.getDay()];
+    
+    // Create possible Spanish date formats
+    const spanishDateFormats = [
+      `${dayName}, ${day} de ${spanishMonthNames[month]} de ${year}`,
+      `${day} de ${spanishMonthNames[month]} de ${year}`
+    ];
+    
+    console.log(`Looking for bookings on ${dateStr} for employee ${employee.name}`);
+    console.log('Checking these date formats:', {
+      iso: dateStr,
+      spanishFormats: spanishDateFormats
+    });
+    console.log('Employee schedule structure:', {
+      type: typeof employeeSchedule,
+      hasBookings: !!employeeSchedule?.bookings,
+      bookingDates: employeeSchedule?.bookings ? Object.keys(employeeSchedule.bookings) : [],
+      bookingsType: employeeSchedule?.bookings ? typeof employeeSchedule.bookings : 'undefined'
+    });
+    
+    // Try to find bookings using different date formats
+    let dateBookings = employeeSchedule?.bookings?.[dateStr] || {};
+    
+    // If no bookings found with ISO format, try Spanish formats
+    if (Object.keys(dateBookings).length === 0 && employeeSchedule?.bookings) {
+      for (const spanishDate of spanishDateFormats) {
+        console.log(`Checking for Spanish date format: ${spanishDate}`);
+        const bookingsForSpanishDate = employeeSchedule.bookings[spanishDate];
+        if (bookingsForSpanishDate) {
+          console.log(`Found bookings using Spanish format: ${spanishDate}`, bookingsForSpanishDate);
+          
+          // If the bookings are in array format (as seen in the console)
+          if (Array.isArray(bookingsForSpanishDate)) {
+            dateBookings = {};
+            bookingsForSpanishDate.forEach((booking, index) => {
+              dateBookings[`booking-${index}`] = booking;
+            });
+          } else {
+            dateBookings = bookingsForSpanishDate;
+          }
+          break;
+        }
+      }
+    }
     
     console.log('Date:', dateStr);
     console.log('Schedule:', employeeSchedule);
-    console.log('Found bookings:', dateBookings);
+    console.log(`Found bookings for date:`, {
+      count: Object.keys(dateBookings).length,
+      bookingsData: dateBookings
+    });
     
     // Process bookings for this date
-    const activeBookings = Object.values(dateBookings)
-      .filter((booking: any) => {
+    let activeBookings = [];
+    
+    if (Array.isArray(dateBookings)) {
+      console.log('Processing array-format bookings');
+      activeBookings = dateBookings.filter((booking: any) => {
         // Only consider pending and confirmed bookings
         const validStatus = ['pending', 'confirmed'].includes(booking.status);
-        // Make sure the booking has valid time slot data
-        const hasValidTimeSlot = booking.timeSlot && booking.timeSlot.start && booking.timeSlot.end;
-        return validStatus && hasValidTimeSlot;
-      })
-      .map((booking: any) => {
-        const start = booking.timeSlot.start;
-        const end = booking.timeSlot.end;
+        return validStatus;
+      });
+    } else {
+      console.log('Processing object-format bookings');
+      activeBookings = Object.values(dateBookings)
+        .filter((booking: any) => {
+          // Only consider pending and confirmed bookings
+          const validStatus = ['pending', 'confirmed'].includes(booking.status);
+          // Make sure the booking has valid time slot data (or check format later)
+          return validStatus;
+        });
+    }
+    
+    console.log('Active bookings before processing:', activeBookings);
+    
+    // Map bookings to a consistent format
+    activeBookings = activeBookings.map((booking: any) => {
+        console.log('Processing booking for mapping:', booking);
+        
+        // Handle different formats of timeSlot
+        let start, end;
+        
+        if (booking.start && booking.end) {
+          // Already in the right format
+          start = booking.start;
+          end = booking.end;
+        } else if (typeof booking.timeSlot === 'string') {
+          // Handle string timeSlot format like "09:00 - 10:50"
+          const parts = booking.timeSlot.split('-');
+          if (parts.length === 2) {
+            start = parts[0].trim();
+            end = parts[1].trim();
+          } else {
+            console.warn('Invalid booking timeSlot string format:', booking.timeSlot);
+            // Default values to avoid errors
+            start = '00:00';
+            end = '00:00';
+          }
+        } else if (booking.timeSlot && booking.timeSlot.start && booking.timeSlot.end) {
+          // Handle object timeSlot format
+          start = booking.timeSlot.start;
+          end = booking.timeSlot.end;
+        } else {
+          console.warn('Booking has no valid time information:', booking);
+          // Default values to avoid errors
+          start = '00:00';
+          end = '00:00';
+        }
+        
         const duration = booking.duration || (
           // If duration is missing, calculate it from start and end times
           this.timeToMinutes(end) - this.timeToMinutes(start)
         );
+        
+        console.log(`Processing booking with time slot: ${start}-${end}, duration: ${duration}`);
         
         return {
           start,
@@ -131,6 +235,8 @@ export class AvailabilityService {
           status: booking.status
         };
       });
+      
+    console.log(`Processed ${activeBookings.length} active bookings:`, activeBookings);
       
     console.log('Processed active bookings:', activeBookings);
     
@@ -177,18 +283,80 @@ export class AvailabilityService {
         const startTime = this.minutesToTime(intervalStart);
 
         // Check if this interval overlaps with any booking
+        console.log(`Checking overlap for interval ${startTime}-${this.minutesToTime(intervalEnd)}`);
+        
         const hasOverlap = activeBookings.some(booking => {
-          const bookingStart = this.timeToMinutes(booking.start);
-          const bookingEnd = this.timeToMinutes(booking.end);
+          console.log('Checking booking for overlap:', booking);
+          
+          // Make sure booking has valid start and end times
+          let bookingStart = 0;
+          let bookingEnd = 0;
+          let bookingStartStr = '';
+          let bookingEndStr = '';
 
-          return (
-            (bookingStart <= intervalStart && bookingEnd > intervalStart) || // Booking starts before and ends during/after
-            (bookingStart >= intervalStart && bookingStart < intervalEnd) // Booking starts during
+          if (booking.start && booking.end) {
+            bookingStart = this.timeToMinutes(booking.start);
+            bookingEnd = this.timeToMinutes(booking.end);
+            bookingStartStr = booking.start;
+            bookingEndStr = booking.end;
+          } else if (typeof booking.timeSlot === 'string') {
+            // Handle string timeSlot format like "09:00 - 10:00"
+            const parts = booking.timeSlot.split('-');
+            if (parts.length === 2) {
+              bookingStartStr = parts[0].trim();
+              bookingEndStr = parts[1].trim();
+              bookingStart = this.timeToMinutes(bookingStartStr);
+              bookingEnd = this.timeToMinutes(bookingEndStr);
+            } else {
+              console.warn('Invalid booking timeSlot format:', booking.timeSlot);
+              return false;
+            }
+          } else if (booking.timeSlot && booking.timeSlot.start && booking.timeSlot.end) {
+            // Handle object timeSlot format
+            bookingStartStr = booking.timeSlot.start;
+            bookingEndStr = booking.timeSlot.end;
+            bookingStart = this.timeToMinutes(bookingStartStr);
+            bookingEnd = this.timeToMinutes(bookingEndStr);
+          } else {
+            console.warn('Booking has no valid time information:', booking);
+            return false;
+          }
+
+          console.log('Converted times for overlap check:', {
+            bookingStartTime: bookingStartStr,
+            bookingEndTime: bookingEndStr,
+            intervalStartTime: startTime,
+            intervalEndTime: this.minutesToTime(intervalEnd),
+            bookingStartMinutes: bookingStart,
+            bookingEndMinutes: bookingEnd,
+            intervalStartMinutes: intervalStart,
+            intervalEndMinutes: intervalEnd
+          });
+
+          // More comprehensive overlap check
+          const overlaps = (
+            // Case 1: Interval starts during booking
+            (intervalStart >= bookingStart && intervalStart < bookingEnd) ||
+            // Case 2: Interval ends during booking
+            (intervalEnd > bookingStart && intervalEnd <= bookingEnd) ||
+            // Case 3: Interval contains booking
+            (intervalStart <= bookingStart && intervalEnd >= bookingEnd) ||
+            // Case 4: Booking contains interval
+            (bookingStart <= intervalStart && bookingEnd >= intervalEnd)
           );
+          
+          if (overlaps) {
+            console.log(`Overlap detected: interval ${startTime}-${this.minutesToTime(intervalEnd)} overlaps with booking ${bookingStartStr}-${bookingEndStr}`);
+          }
+          
+          return overlaps;
         });
 
         if (!hasOverlap) {
+          console.log(`Adding available interval: ${startTime}`);
           availableIntervals.push(startTime);
+        } else {
+          console.log(`Skipping unavailable interval: ${startTime}`);
         }
 
         intervalStart += 15; // Move to next 15-minute interval
