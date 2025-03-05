@@ -26,3 +26,8 @@ dist-ssr
 .vercel
 .env
 service-account.json
+
+# Test HTML files
+test-direct-mode.html
+direct-embed.html
+iframe-embed.html
