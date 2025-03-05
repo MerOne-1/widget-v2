@@ -332,12 +332,16 @@ export class WidgetDataService {
           sampleBookings: Object.entries(transformedSchedule.bookings || {}).slice(0, 2)
         });
         
+        // Log the appointment gap for debugging
+        console.log(`Professional ${professional.name} has appointmentGap:`, professional.appointmentGap);
+        
         return {
           id: professional.id,
           name: professional.name,
           role: professional.role,
           active: professional.active,
           services: professional.services,
+          appointmentGap: professional.appointmentGap || 0, // Include the appointment gap
           schedule: transformedSchedule
         };
       });

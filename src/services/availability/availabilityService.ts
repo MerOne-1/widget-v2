@@ -46,8 +46,12 @@ export class AvailabilityService {
       employeeId: employee.id,
       employeeName: employee.name,
       date: date.toISOString(),
-      rawSchedule: employee.schedule
+      rawSchedule: employee.schedule,
+      appointmentGap: employee.appointmentGap
     });
+    
+    // Log appointment gap for debugging
+    console.log(`APPOINTMENT GAP for ${employee.name}: ${employee.appointmentGap || 0} minutes`);
     
     const fbSchedule = employee.schedule as unknown as FirebaseSchedule;
     console.log('Parsed Firebase schedule:', {
@@ -293,6 +297,10 @@ export class AvailabilityService {
           let bookingEnd = 0;
           let bookingStartStr = '';
           let bookingEndStr = '';
+          
+          // Get the appointment gap for this professional (in minutes)
+          const appointmentGap = employee.appointmentGap || 0;
+          console.log(`Using appointment gap of ${appointmentGap} minutes for booking overlap check`);
 
           if (booking.start && booking.end) {
             bookingStart = this.timeToMinutes(booking.start);
@@ -333,20 +341,45 @@ export class AvailabilityService {
             intervalEndMinutes: intervalEnd
           });
 
-          // More comprehensive overlap check
+          // Add the appointment gap to both the start and end time of the booking
+          const bookingStartWithGap = bookingStart - appointmentGap; // Gap before booking
+          const bookingEndWithGap = bookingEnd + appointmentGap;     // Gap after booking
+          
+          console.log('Checking overlap with gaps:', {
+            bookingStart,
+            bookingStartWithGap, // Gap before booking
+            bookingEnd,
+            bookingEndWithGap,   // Gap after booking
+            appointmentGap,
+            intervalStart,
+            intervalEnd,
+            bookingStartTime: this.minutesToTime(bookingStart),
+            bookingEndTime: this.minutesToTime(bookingEnd),
+            bookingEndWithGapTime: this.minutesToTime(bookingEndWithGap),
+            intervalStartTime: this.minutesToTime(intervalStart),
+            intervalEndTime: this.minutesToTime(intervalEnd)
+          });
+          
+          // More comprehensive overlap check including the gap before and after booking
           const overlaps = (
-            // Case 1: Interval starts during booking
-            (intervalStart >= bookingStart && intervalStart < bookingEnd) ||
-            // Case 2: Interval ends during booking
-            (intervalEnd > bookingStart && intervalEnd <= bookingEnd) ||
-            // Case 3: Interval contains booking
-            (intervalStart <= bookingStart && intervalEnd >= bookingEnd) ||
-            // Case 4: Booking contains interval
-            (bookingStart <= intervalStart && bookingEnd >= intervalEnd)
+            // Case 1: Interval starts during booking or its gaps (before or after)
+            (intervalStart >= bookingStartWithGap && intervalStart < bookingEndWithGap) ||
+            // Case 2: Interval ends during booking or its gaps (before or after)
+            (intervalEnd > bookingStartWithGap && intervalEnd <= bookingEndWithGap) ||
+            // Case 3: Interval contains booking or its gaps
+            (intervalStart <= bookingStartWithGap && intervalEnd >= bookingEndWithGap) ||
+            // Case 4: Booking and its gaps contains interval
+            (bookingStartWithGap <= intervalStart && bookingEndWithGap >= intervalEnd)
           );
           
           if (overlaps) {
-            console.log(`Overlap detected: interval ${startTime}-${this.minutesToTime(intervalEnd)} overlaps with booking ${bookingStartStr}-${bookingEndStr}`);
+            if (intervalStart >= bookingEnd && intervalStart < bookingEndWithGap) {
+              console.log(`Gap after overlap detected: interval ${startTime}-${this.minutesToTime(intervalEnd)} overlaps with booking gap after ${bookingEndStr}`);
+            } else if (intervalEnd > bookingStartWithGap && intervalEnd <= bookingStart) {
+              console.log(`Gap before overlap detected: interval ${startTime}-${this.minutesToTime(intervalEnd)} overlaps with booking gap before ${bookingStartStr}`);
+            } else {
+              console.log(`Booking overlap detected: interval ${startTime}-${this.minutesToTime(intervalEnd)} overlaps with booking ${bookingStartStr}-${bookingEndStr}`);
+            }
           }
           
           return overlaps;
