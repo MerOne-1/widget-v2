@@ -68,6 +68,7 @@ export const syncWidgetData = onDocumentWritten(
             active: employee.active,
             services: employee.services,
             schedule: employee.schedule,
+            appointmentGap: employee.appointmentGap || 0, // Include the appointment gap with a default of 0
             bookings: {}
           };
         });

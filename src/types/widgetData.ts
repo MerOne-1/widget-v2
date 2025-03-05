@@ -27,6 +27,7 @@ export interface WidgetData {
       role: string;
       active: boolean;
       services: string[];
+      appointmentGap: number; // Gap time between appointments in minutes
       schedule: {
         [day: string]: {
           start: string;
