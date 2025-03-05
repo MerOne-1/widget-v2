@@ -12,18 +12,18 @@ import { ClientInfoForm } from './ClientInfoForm';
 import { ConfirmationSection } from './ConfirmationSection';
 import { theme } from '../styles/theme';
 
-const PopupOverlay = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+const PopupOverlay = styled.div<{ $isDirectMode?: boolean }>`
+  position: ${props => props.$isDirectMode ? 'relative' : 'fixed'};
+  top: ${props => props.$isDirectMode ? 'auto' : '0'};
+  left: ${props => props.$isDirectMode ? 'auto' : '0'};
+  right: ${props => props.$isDirectMode ? 'auto' : '0'};
+  bottom: ${props => props.$isDirectMode ? 'auto' : '0'};
+  background-color: ${props => props.$isDirectMode ? 'transparent' : 'rgba(0, 0, 0, 0.5)'};
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: ${props => props.$isDirectMode ? 'flex-start' : 'center'};
   z-index: 9999;
-  padding: 16px;
+  padding: ${props => props.$isDirectMode ? '0' : '16px'};
   overscroll-behavior: none;
   touch-action: none;
   -webkit-overflow-scrolling: touch;
@@ -34,15 +34,15 @@ const PopupOverlay = styled.div`
   }
 `;
 
-const PopupContent = styled.div.attrs({ id: 'popup-content' })`
+const PopupContent = styled.div.attrs({ id: 'popup-content' })<{ $isDirectMode?: boolean }>`
   background: white;
   padding: 32px;
-  border: 2px solid ${theme.colors.containerBorder};
-  border-radius: ${theme.borderRadius.default};
+  border: ${props => props.$isDirectMode ? 'none' : `2px solid ${theme.colors.containerBorder}`};
+  border-radius: ${props => props.$isDirectMode ? '0' : theme.borderRadius.default};
   position: relative;
-  width: 90%;
-  max-width: 500px;
-  max-height: 90vh;
+  width: ${props => props.$isDirectMode ? '100%' : '90%'};
+  max-width: ${props => props.$isDirectMode ? '100%' : '500px'};
+  max-height: ${props => props.$isDirectMode ? 'none' : '90vh'};
   display: flex;
   flex-direction: column;
   overflow-y: auto;
@@ -172,6 +172,7 @@ interface BookingPopupProps {
   onClose: () => void;
   initialCategories: ServiceCategory[];
   initialEmployees: Employee[];
+  isDirectMode?: boolean;
 }
 
 type BookingStep = 'services' | 'employee' | 'datetime' | 'client-info' | 'confirmation';
@@ -185,7 +186,7 @@ interface ClientInfo {
   comments?: string;
 }
 
-export const BookingPopup: React.FC<BookingPopupProps> = ({ onClose, initialCategories, initialEmployees }) => {
+export const BookingPopup: React.FC<BookingPopupProps> = ({ onClose, initialCategories, initialEmployees, isDirectMode = false }) => {
   const [isLoadingAvailability, setIsLoadingAvailability] = useState(false);
 
   // Preload availability data for all employees when the component mounts
@@ -417,14 +418,17 @@ export const BookingPopup: React.FC<BookingPopupProps> = ({ onClose, initialCate
   };
 
   return createPortal(
-    <PopupOverlay onClick={(e) => {
-      // Only close if clicking the overlay background
-      if (e.target === e.currentTarget) {
-        onClose();
-      }
-    }}>
-      <PopupContent onClick={(e) => e.stopPropagation()}>
-        <CloseButton onClick={onClose}>&times;</CloseButton>
+    <PopupOverlay 
+      $isDirectMode={isDirectMode} 
+      onClick={(e) => {
+        // Only close if clicking the overlay background and not in direct mode
+        if (!isDirectMode && e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+    >
+      <PopupContent $isDirectMode={isDirectMode} onClick={(e) => e.stopPropagation()}>
+        {!isDirectMode && <CloseButton onClick={onClose}>&times;</CloseButton>}
         <Title>
           {currentStep === 'services' && 'Selecciona los Servicios'}
           {currentStep === 'employee' && 'Elige tu Profesional'}
